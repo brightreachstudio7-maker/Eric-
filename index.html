@@ -6,28 +6,49 @@
   <title>Sokoni Marketplace</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --pr: #17a673; --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --border: #30363d; }
-    [data-theme="light"] { --bg: #f6f8fa; --card: #ffffff; --text: #24292e; --border: #e1e4e8; }
+    :root { 
+      --pr: #ff6600; 
+      --pr-hover: #e65c00;
+      --bg: #f5f5f5; 
+      --card: #ffffff; 
+      --text: #222222; 
+      --border: #e0e0e0; 
+      --mu: #777777;
+    }
+    [data-theme="dark"] { 
+      --bg: #121212; 
+      --card: #1e1e1e; 
+      --text: #e0e0e0; 
+      --border: #2c2c2c; 
+      --mu: #aaaaaa;
+    }
     * { box-sizing: border-box; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    button { background: var(--pr); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    button.sec { background: var(--border); color: var(--text); }
-    button.dan { background: #f85149; color: #fff; }
-    input, select, textarea { width: 100%; padding: 10px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; margin: 6px 0 12px 0; }
-    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-    .msg { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    button { background: var(--pr); color: #fff; border: none; padding: 10px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: var(--pr-hover); }
+    button.sec { background: var(--border); color: var(--text); border-radius: 20px; }
+    button.sec:hover { opacity: 0.8; }
+    button.dan { background: #ff4d4d; color: #fff; border-radius: 20px; }
+    input, select, textarea { width: 100%; padding: 12px; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; margin: 6px 0 12px 0; font-size: 14px; }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .msg { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
     .row { display: flex; align-items: center; gap: 10px; }
-    .mu { color: #8b949e; font-size: 13px; }
+    .mu { color: var(--mu); font-size: 13px; }
     .price { font-weight: 800; color: var(--pr); }
     .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
-    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: rgba(23,166,115,0.15); color: var(--pr); font-weight: 600; }
-    .chip { display: inline-block; padding: 6px 12px; border-radius: 99px; font-size: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); cursor: pointer; white-space: nowrap; }
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; background: rgba(255,102,0,0.1); color: var(--pr); font-weight: 700; }
+    .chip { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px; background: var(--card); border: 1px solid var(--border); color: var(--text); cursor: pointer; white-space: nowrap; font-weight: 500; }
     .chip.active { background: var(--pr); color: #fff; border-color: var(--pr); }
-    #app { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 95px; }
-    nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; }
-    nav button { background: none; color: var(--text); font-size: 11px; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    #app { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
+    
+    /* Temu-style Bottom Navbar */
+    nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+    nav button { background: none; color: var(--mu); font-size: 11px; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; border-radius: 0; font-weight: 500; }
     nav button.active { color: var(--pr); }
+    nav button span.icon { font-size: 20px; }
+
+    /* Smooth Badge */
+    .badge-count { position: absolute; top: 4px; right: 22%; background: #ff4d4d; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -35,15 +56,15 @@
   <div id="app"></div>
 
   <nav>
-    <button id="nav-home" onclick="go('home')">🏠<span>Home</span></button>
-    <button id="nav-categories" onclick="go('categories')">📂<span>Categories</span></button>
-    <button id="nav-post" onclick="go('post')">➕<span>Post</span></button>
-    <button id="nav-cart" onclick="go('cart')">🛒<span id="cart-badge">Cart</span></button>
-    <button id="nav-settings" onclick="go('settings')">⚙️<span>Settings</span></button>
+    <button id="nav-home" onclick="go('home')"><span class="icon">🏠</span><span>Home</span></button>
+    <button id="nav-categories" onclick="go('categories')"><span class="icon">📂</span><span>Categories</span></button>
+    <button id="nav-post" onclick="go('post')"><span class="icon">➕</span><span>Post item</span></button>
+    <button id="nav-cart" onclick="go('cart')" style="position:relative"><span class="icon">🛒</span><span>Cart</span><span id="cart-badge" class="badge-count" style="display:none">0</span></button>
+    <button id="nav-settings" onclick="go('settings')"><span class="icon">👤</span><span>You</span></button>
   </nav>
 
 <script>
-  // 1. SUPABASE CONFIGURATION (Replace with your Supabase Project URL and Anon Key)
+  // SUPABASE CONFIGURATION (Replace with your keys if using cloud backend)
   const SUPABASE_URL = "YOUR_SUPABASE_URL";
   const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
   const sb = (SUPABASE_URL !== "YOUR_SUPABASE_URL") ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -55,15 +76,8 @@
     { name: "Vehicles", icon: "🚗" },
     { name: "Beauty & Health", icon: "💄" },
     { name: "Sports & Outdoors", icon: "⚽" },
-    { name: "Services", icon: "🛠️" },
+    { name: "Toys & Gaming", icon: "🎮" },
     { name: "Other", icon: "📦" }
-  ];
-
-  const DEFAULT_LISTINGS = [
-    { id: "demo-1", title: "Wireless Noise-Cancelling Earbuds", price: 19.99, category: "Electronics", condition: "New", location: "Nairobi", description: "Bluetooth 5.3, 30h battery life, deep bass & charging case.", image_url: "", seller_email: "techstore@sokoni.app" },
-    { id: "demo-2", title: "Vintage Classic Denim Jacket", price: 28.00, category: "Fashion", condition: "Like New", location: "Kampala", description: "100% heavy cotton denim, unisex fit, size L.", image_url: "", seller_email: "stylehub@sokoni.app" },
-    { id: "demo-3", title: "Smart Fitness Watch Series 8", price: 45.00, category: "Electronics", condition: "New", location: "Dar es Salaam", description: "Heart rate, GPS tracking, waterproof IP68, AMOLED display.", image_url: "", seller_email: "gadgetpro@sokoni.app" },
-    { id: "demo-4", title: "Minimalist LED Desk Lamp", price: 14.50, category: "Home & Garden", condition: "New", location: "Kigali", description: "3 brightness levels, USB-C rechargeable, eye-care warm light.", image_url: "", seller_email: "homeliving@sokoni.app" }
   ];
 
   let S = {
@@ -71,7 +85,8 @@
     listings: [],
     cart: [],
     orders: [],
-    credit: 0.60,
+    addresses: [],
+    credit: 0.00,
     sellerPro: false,
     page: "home",
     search: "",
@@ -79,25 +94,25 @@
   };
 
   const $ = s => document.querySelector(s);
-  function usd(n) { return "$" + Number(n || 0).toFixed(2); }
+  function usd(n) { return "£" + Number(n || 0).toFixed(2); }
   function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-  function uname() { return S.user?.user_metadata?.full_name || S.user?.email?.split("@")[0] || "Sokoni Member"; }
 
   function modal(html) {
     closeP();
     let m = document.createElement("div");
     m.className = "sokoni-modal";
-    m.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:15px;";
-    m.innerHTML = `<div style="background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;width:100%;max-width:400px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`;
+    m.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;z-index:9999;animation:fadeIn 0.2s ease;";
+    m.innerHTML = `<div style="background:var(--card);color:var(--text);border-top-left-radius:20px;border-top-right-radius:20px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;position:relative;box-shadow:0 -4px 20px rgba(0,0,0,0.15)">${html}</div>`;
     document.body.appendChild(m);
     return m;
   }
   function closeP() { document.querySelectorAll(".sokoni-modal").forEach(el => el.remove()); }
+  
   function toast(msg) {
     let t = document.createElement("div");
-    t.style.cssText = "position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#17a673;color:#fff;padding:8px 16px;border-radius:20px;z-index:10000;font-weight:600;font-size:13px;text-align:center;max-width:90%;";
+    t.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:25px;z-index:10000;font-weight:600;font-size:13px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);";
     t.innerText = msg; document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2600);
+    setTimeout(() => t.remove(), 2500);
   }
 
   function saveState() {
@@ -105,33 +120,41 @@
     localStorage.setItem("sokoni_credit_" + uid, S.credit.toFixed(2));
     localStorage.setItem("sokoni_cart_" + uid, JSON.stringify(S.cart));
     localStorage.setItem("sokoni_orders_" + uid, JSON.stringify(S.orders));
+    localStorage.setItem("sokoni_addresses_" + uid, JSON.stringify(S.addresses));
     localStorage.setItem("sokoni_sellerpro_" + uid, S.sellerPro ? "1" : "0");
     updateCartBadge();
   }
 
   function updateCartBadge() {
-    const el = $("#cart-badge");
-    if (el) el.innerText = S.cart.length ? `Cart (${S.cart.length})` : "Cart";
+    const badge = $("#cart-badge");
+    if (!badge) return;
+    if (S.cart.length > 0) {
+      badge.style.display = "block";
+      badge.innerText = S.cart.length;
+    } else {
+      badge.style.display = "none";
+    }
   }
 
   async function init() {
-    const savedTheme = localStorage.getItem("sokoni-theme") || "dark";
+    const savedTheme = localStorage.getItem("sokoni-theme") || "light";
     document.documentElement.dataset.theme = savedTheme;
 
     if (sb) {
       try {
         const { data: { session } } = await sb.auth.getSession();
         S.user = session?.user || null;
-      } catch (e) { console.error(e); }
+      } catch (e) {}
     } else {
-      S.user = { id: "demo-user", email: "member@sokoni.app" };
+      S.user = { id: "guest-user", email: "Timetofixthisshit@gmail.com" };
     }
 
     const uid = S.user?.id || "guest";
     const savedCredit = localStorage.getItem("sokoni_credit_" + uid);
-    if (savedCredit !== null) S.credit = parseFloat(savedCredit) || 0.60;
+    if (savedCredit !== null) S.credit = parseFloat(savedCredit) || 0.00;
     try { S.cart = JSON.parse(localStorage.getItem("sokoni_cart_" + uid) || "[]"); } catch (e) { S.cart = []; }
     try { S.orders = JSON.parse(localStorage.getItem("sokoni_orders_" + uid) || "[]"); } catch (e) { S.orders = []; }
+    try { S.addresses = JSON.parse(localStorage.getItem("sokoni_addresses_" + uid) || "[]"); } catch (e) { S.addresses = []; }
     S.sellerPro = localStorage.getItem("sokoni_sellerpro_" + uid) === "1";
 
     await loadListings();
@@ -152,7 +175,11 @@
         }
       } catch (e) {}
     }
-    S.listings = [...localListings, ...DEFAULT_LISTINGS];
+    // Feed strictly displays user-posted items or clean starter items
+    S.listings = localListings.length ? localListings : [
+      { id: "demo-1", title: "Ultra-thin Portable Power Bank 20000mAh", price: 5.69, original_price: 6.89, category: "Electronics", condition: "New", location: "United Kingdom", description: "High-capacity portable charger with digital display. Fast charging support.", image_url: "https://images.unsplash.com/photo-1609592424154-4caac3e04739?w=500&auto=format&fit=crop&q=60", sold: "20K+ sold", rating: 4.8 },
+      { id: "demo-2", title: "20.5Cm Alloy Full Suspension Mountain Bike", price: 5.05, original_price: 5.14, category: "Sports & Outdoors", condition: "New", location: "United Kingdom", description: "Professional alloy display model mountain bike with responsive suspension.", image_url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&auto=format&fit=crop&q=60", sold: "428 sold", rating: 5.0 }
+    ];
   }
 
   function go(page) {
@@ -160,6 +187,7 @@
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     const btn = document.getElementById("nav-" + page);
     if (btn) btn.classList.add("active");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (page === "home") renderHome();
     else if (page === "categories") renderCategories();
     else if (page === "post") renderPost();
@@ -167,7 +195,7 @@
     else if (page === "settings") renderSettings();
   }
 
-  // ==================== 1. FULL HOME FEED ====================
+  // ==================== HOME FEED ====================
   function renderHome() {
     const filtered = S.listings.filter(item => {
       const matchesCat = S.selectedCat === "All" || (item.category || "Other") === S.selectedCat;
@@ -176,130 +204,147 @@
     });
 
     $("#app").innerHTML = `
-      <div class="row" style="justify-content:space-between;margin-bottom:10px">
-        <h2 style="margin:0">🛍️ Sokoni</h2>
-        <span class="tag">🛡️ Trade Assurance</span>
-      </div>
-
-      <input id="home-search" value="${esc(S.search)}" placeholder="🔍 Search products, electronics, fashion..." oninput="S.search=this.value;renderHome()">
-
-      <div class="panel" style="background:linear-gradient(135deg,#17a673,#0f766e);color:#fff;border:none;padding:14px">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <b>🔥 Welcome Deals &amp; Vouchers</b>
-            <div style="font-size:12px;opacity:.92;margin-top:3px">Use code <b>SOKONI15</b> for 15% off · Buyer Protection included</div>
-          </div>
-          <button style="background:#fff;color:#0f766e;padding:6px 10px;font-size:12px" onclick="openCoupons()">Claim</button>
+      <!-- Search Top Header -->
+      <div class="row" style="margin-bottom:12px; gap:8px;">
+        <div style="flex:1; position:relative;">
+          <input id="home-search" value="${esc(S.search)}" placeholder="🔍 Search products, electronics..." oninput="S.search=this.value;renderHome()" style="margin:0; padding-left:14px; border-radius:24px;">
         </div>
       </div>
 
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px">
+      <!-- Voucher Banner -->
+      <div class="panel" style="background:linear-gradient(135deg,#ff6600,#ff8533); color:#fff; border:none; padding:14px; border-radius:12px; margin-bottom:12px;">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <b>🔥 UP TO £100 COUPON BUNDLE</b>
+            <div style="font-size:12px; opacity:0.9; margin-top:3px">With qualifying order(s) · Free worldwide shipping</div>
+          </div>
+          <button style="background:#fff; color:#ff6600; padding:6px 14px; font-size:12px; border-radius:20px;" onclick="openCoupons()">Get</button>
+        </div>
+      </div>
+
+      <!-- Quick Action Pills -->
+      <div class="row" style="justify-content:space-between; margin-bottom:14px; text-align:center; font-size:12px;">
+        <div onclick="openOrders()" style="cursor:pointer"><div style="font-size:22px">📦</div>Orders</div>
+        <div onclick="openMessages()" style="cursor:pointer"><div style="font-size:22px">💬</div>Messages</div>
+        <div onclick="openAddresses()" style="cursor:pointer"><div style="font-size:22px">📍</div>Addresses</div>
+        <div onclick="openSpin()" style="cursor:pointer"><div style="font-size:22px">🎁</div>Credits</div>
+      </div>
+
+      <!-- Category Filter Chips -->
+      <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px; scrollbar-width:none;">
         <span class="chip ${S.selectedCat === 'All' ? 'active' : ''}" onclick="S.selectedCat='All';renderHome()">All</span>
         ${CATEGORIES.map(c => `<span class="chip ${S.selectedCat === c.name ? 'active' : ''}" onclick="S.selectedCat='${c.name}';renderHome()">${c.icon} ${c.name}</span>`).join("")}
       </div>
 
+      <!-- Product Grid -->
       <div class="grid2">
         ${filtered.length ? filtered.map(l => `
-          <div class="panel" style="padding:10px;margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
+          <div class="panel" style="padding:8px; margin-bottom:0; display:flex; flex-direction:column; justify-content:space-between;">
             <div style="cursor:pointer" onclick="viewProduct('${l.id}')">
-              <div style="height:120px;background:#21262d;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden">
-                ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%;height:100%;object-fit:cover">` : (CATEGORIES.find(c => c.name === l.category)?.icon || "📦")}
+              <div style="height:150px; background:#f0f0f0; border-radius:8px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+                ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%; height:100%; object-fit:cover;">` : (CATEGORIES.find(c => c.name === l.category)?.icon || "📦")}
               </div>
-              <span class="mu" style="font-size:11px">${esc(l.category || "General")} · ${esc(l.location || "Verified")}</span>
-              <b style="font-size:14px;display:block;margin:3px 0;line-height:1.3">${esc(l.title)}</b>
+              <b style="font-size:13px; display:block; margin:4px 0; line-height:1.3; height:34px; overflow:hidden;">${esc(l.title)}</b>
+              <div class="mu" style="font-size:11px">📍 ${esc(l.location || "Worldwide")}</div>
             </div>
-            <div style="margin-top:6px">
-              <div class="price" style="font-size:16px">${usd(l.price)}</div>
-              <button style="width:100%;margin-top:8px;padding:7px;font-size:12px" onclick="addToCart('${l.id}')">🛒 Add to Cart</button>
+            <div style="margin-top:8px;">
+              <div class="row" style="justify-content:space-between; align-items:flex-end;">
+                <div>
+                  <span class="price" style="font-size:16px">${usd(l.price)}</span>
+                  ${l.original_price ? `<span class="mu" style="font-size:11px; text-decoration:line-through; margin-left:4px">${usd(l.original_price)}</span>` : ''}
+                </div>
+                <button style="padding:6px 10px; font-size:14px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;" onclick="addToCart('${l.id}');event.stopPropagation();">🛒</button>
+              </div>
+              ${l.sold ? `<div class="mu" style="font-size:10px; margin-top:4px">🔥 ${esc(l.sold)}</div>` : ''}
             </div>
           </div>
-        `).join("") : `<div class="panel" style="grid-column:1/-1;text-align:center"><p class="mu">No matching listings found.</p></div>`}
+        `).join("") : `<div class="panel" style="grid-column:1/-1; text-align:center"><p class="mu">No items found. Post a product using the ➕ Post tab!</p></div>`}
       </div>`;
   }
 
+  // ==================== TEMU-STYLE PRODUCT DETAIL & LIVE TRACKING ====================
   function viewProduct(id) {
     const l = S.listings.find(x => String(x.id) === String(id));
     if (!l) return;
+
     modal(`
-      <div style="height:160px;background:#21262d;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">
-        ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%;height:100%;object-fit:cover">` : (CATEGORIES.find(c => c.name === l.category)?.icon || "📦")}
+      <button onclick="closeP()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; z-index:10; padding:0;">&times;</button>
+      
+      <div style="height:260px; background:#f0f0f0; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%; height:100%; object-fit:cover">` : "📦"}
       </div>
-      <div class="row" style="justify-content:space-between">
+
+      <div class="row" style="justify-content:space-between; margin-bottom:6px">
         <span class="tag">${esc(l.category || "Item")}</span>
-        <span class="mu">${esc(l.condition || "New")} · 📍 ${esc(l.location || "Sokoni")}</span>
+        <span class="mu">📍 ${esc(l.location || "Worldwide")}</span>
       </div>
-      <h2 style="margin:8px 0 4px 0">${esc(l.title)}</h2>
-      <div class="price" style="font-size:22px;margin-bottom:10px">${usd(l.price)}</div>
-      <p class="mu" style="line-height:1.5">${esc(l.description || "Verified listing protected by Sokoni Trade Assurance.")}</p>
-      <div class="row" style="margin-top:14px">
-        <button style="flex:1" onclick="addToCart('${l.id}');closeP()">🛒 Add to Cart</button>
-        <button class="sec" onclick="closeP()">Close</button>
+
+      <h2 style="margin:4px 0 8px 0; font-size:18px; line-height:1.3">${esc(l.title)}</h2>
+
+      <div class="row" style="justify-content:space-between; margin-bottom:12px">
+        <div>
+          <span class="price" style="font-size:24px">${usd(l.price)}</span>
+          ${l.original_price ? `<span class="mu" style="text-decoration:line-through; margin-left:8px">${usd(l.original_price)}</span>` : ''}
+        </div>
+        <span class="tag" style="background:rgba(0,180,0,0.1); color:#00b400">✓ In Stock</span>
+      </div>
+
+      <div class="panel" style="background:rgba(255,102,0,0.05); border:1px solid rgba(255,102,0,0.2); padding:10px; margin-bottom:12px; font-size:12px;">
+        <b>🛡️ Sokoni Worldwide Protection &amp; Tracking</b><br>
+        • Live end-to-end tracking when purchased<br>
+        • Free returns &amp; 90-day buyer guarantee
+      </div>
+
+      <p class="mu" style="font-size:13px; line-height:1.5; margin-bottom:16px;">${esc(l.description || "Verified global listing ready for immediate worldwide dispatch.")}</p>
+
+      <div class="row" style="gap:8px;">
+        <button class="sec" style="flex:1" onclick="addToCart('${l.id}');toast('Added to cart ✔')">Add to Cart</button>
+        <button style="flex:1" onclick="addToCart('${l.id}');go('cart');closeP()">Buy Now</button>
       </div>
     `);
   }
 
-  // ==================== 2. FULL CATEGORIES VIEW ====================
+  // ==================== CATEGORIES ====================
   function renderCategories() {
     $("#app").innerHTML = `
-      <h2 style="margin-top:0">📂 Browse Categories</h2>
-      <p class="mu" style="margin-bottom:14px">Tap any category to filter marketplace products.</p>
+      <h2 style="margin-top:0">📂 Categories</h2>
       <div class="grid2">
-        ${CATEGORIES.map(c => {
-          const count = S.listings.filter(l => (l.category || "Other") === c.name).length;
-          return `
-            <div class="panel" style="margin-bottom:0;cursor:pointer;text-align:center;padding:20px 10px" onclick="S.selectedCat='${c.name}';go('home')">
-              <div style="font-size:34px;margin-bottom:6px">${c.icon}</div>
-              <b style="display:block;font-size:14px">${c.name}</b>
-              <span class="mu" style="font-size:12px">${count} item${count === 1 ? "" : "s"}</span>
-            </div>`;
-        }).join("")}
+        ${CATEGORIES.map(c => `
+          <div class="panel" style="text-align:center; padding:20px 10px; cursor:pointer; margin-bottom:0;" onclick="S.selectedCat='${c.name}';go('home')">
+            <div style="font-size:32px; margin-bottom:6px">${c.icon}</div>
+            <b style="font-size:14px">${c.name}</b>
+          </div>
+        `).join("")}
       </div>`;
   }
 
-  // ==================== 3. FULL POST LISTING VIEW ====================
+  // ==================== POST ITEM WITH PHOTOS ====================
   function renderPost() {
     $("#app").innerHTML = `
-      <h2 style="margin-top:0">➕ Post a New Listing</h2>
+      <h2 style="margin-top:0">➕ Post a Product</h2>
       <div class="panel">
         <label>Product Title *</label>
-        <input id="ltitle" placeholder="e.g. Samsung Galaxy Buds Pro">
+        <input id="ltitle" placeholder="e.g. Wireless Noise-Cancelling Headphones">
 
         <div class="grid2" style="margin-bottom:0">
-          <div>
-            <label>Price (USD) *</label>
-            <input id="lprice" type="number" step="0.01" placeholder="25.00">
-          </div>
-          <div>
-            <label>Category</label>
-            <select id="lcat">
-              ${CATEGORIES.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join("")}
-            </select>
-          </div>
+          <div><label>Price (£) *</label><input id="lprice" type="number" step="0.01" placeholder="9.99"></div>
+          <div><label>Category</label><select id="lcat">${CATEGORIES.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join("")}</select></div>
         </div>
 
         <div class="grid2" style="margin-bottom:0">
-          <div>
-            <label>Condition</label>
-            <select id="lcond">
-              <option>New</option>
-              <option>Like New</option>
-              <option>Used - Good</option>
-            </select>
-          </div>
-          <div>
-            <label>City / Location</label>
-            <input id="lloc" placeholder="e.g. Nairobi">
-          </div>
+          <div><label>Condition</label><select id="lcond"><option>New</option><option>Like New</option><option>Used</option></select></div>
+          <div><label>Location / Country</label><input id="lloc" placeholder="United Kingdom"></div>
         </div>
 
-        <label>Image URL (Optional)</label>
-        <input id="limg" placeholder="https://example.com/photo.jpg">
+        <label>Product Photo / Image URL *</label>
+        <input id="limg" placeholder="https://images.unsplash.com/... (Paste image link)">
+        <div class="mu" style="margin-top:-6px; margin-bottom:10px">Paste any image link from Unsplash, Google Photos, or your camera roll.</div>
 
         <label>Description</label>
-        <textarea id="ldesc" rows="3" placeholder="Describe features, size, specs, or delivery options..."></textarea>
+        <textarea id="ldesc" rows="3" placeholder="Describe features, specs, warranty..."></textarea>
 
-        <div id="perr" class="mu" style="color:#f85149;margin-bottom:8px"></div>
-        <button id="pbtn" style="width:100%" onclick="publishListing()">Publish Listing</button>
+        <div id="perr" class="mu" style="color:#ff4d4d; margin-bottom:8px"></div>
+        <button style="width:100%" onclick="publishListing()">Publish Listing Live</button>
       </div>`;
   }
 
@@ -308,12 +353,12 @@
     const price = parseFloat($("#lprice").value);
     const category = $("#lcat").value;
     const condition = $("#lcond").value;
-    const location = $("#lloc").value.trim() || "Sokoni Verified";
+    const location = $("#lloc").value.trim() || "United Kingdom";
     const image_url = $("#limg").value.trim();
     const description = $("#ldesc").value.trim();
 
-    if (!title || isNaN(price) || price <= 0) {
-      $("#perr").innerText = "❌ Please enter a valid product title and price.";
+    if (!title || isNaN(price) || price <= 0 || !image_url) {
+      $("#perr").innerText = "❌ Please enter a title, valid price, and photo URL.";
       return;
     }
 
@@ -321,20 +366,20 @@
       id: "item-" + Date.now(),
       title,
       price,
+      original_price: Number((price * 1.3).toFixed(2)),
       category,
       condition,
       location,
       image_url,
       description,
-      seller_id: S.user?.id || "guest",
-      seller_email: S.user?.email || "seller@sokoni.app"
+      sold: "1 sold",
+      rating: 5.0,
+      seller_id: S.user?.id || "guest"
     };
 
-    if (sb && S.user && S.user.id !== "demo-user") {
+    if (sb && S.user && S.user.id !== "guest-user") {
       try {
-        await sb.from("listings").insert({
-          title, price, category, condition, location, image_url, description, seller_id: S.user.id
-        });
+        await sb.from("listings").insert({ title, price, category, condition, location, image_url, description, seller_id: S.user.id });
       } catch (e) {}
     }
 
@@ -344,428 +389,351 @@
     localStorage.setItem("sokoni_local_listings", JSON.stringify(localListings));
 
     S.listings.unshift(newItem);
-    toast("✅ Listing published to Home feed!");
+    toast("✅ Product posted live to Home feed!");
     S.selectedCat = "All";
     go("home");
   }
 
-  // ==================== 4. FULL CART & CHECKOUT VIEW ====================
-  function addToCart(id) {
-    const item = S.listings.find(x => String(x.id) === String(id));
-    if (!item) return;
-    S.cart.push(item);
-    saveState();
-    toast(`🛒 Added "${item.title}" to cart`);
-  }
-
+  // ==================== CART & CHECKOUT ====================
   function renderCart() {
     const subtotal = S.cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const hasAddress = S.addresses.length > 0;
+
     $("#app").innerHTML = `
-      <h2 style="margin-top:0">🛒 Shopping Cart (${S.cart.length})</h2>
+      <h2 style="margin-top:0">🛒 Cart (${S.cart.length})</h2>
       ${S.cart.length ? `
         ${S.cart.map((item, idx) => `
           <div class="panel row" style="justify-content:space-between">
-            <div>
-              <b>${esc(item.title)}</b>
-              <div class="mu">${esc(item.category || "Item")} · <span class="price">${usd(item.price)}</span></div>
+            <div class="row" style="gap:10px">
+              <div style="width:50px; height:50px; background:#f0f0f0; border-radius:6px; overflow:hidden; flex-shrink:0;">
+                ${item.image_url ? `<img src="${esc(item.image_url)}" style="width:100%; height:100%; object-fit:cover">` : '📦'}
+              </div>
+              <div>
+                <b style="font-size:13px; display:block; line-height:1.2">${esc(item.title)}</b>
+                <span class="price">${usd(item.price)}</span>
+              </div>
             </div>
-            <button class="dan" style="padding:6px 10px" onclick="S.cart.splice(${idx},1);saveState();renderCart()">✕</button>
+            <button class="dan" style="padding:4px 10px; font-size:12px" onclick="S.cart.splice(${idx},1);saveState();renderCart()">✕</button>
           </div>
         `).join("")}
 
         <div class="panel">
-          <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <b style="display:block; margin-bottom:6px">📍 Delivery Address</b>
+          ${hasAddress ? `
+            <div class="mu" style="margin-bottom:8px">Shipping to: <b>${esc(S.addresses[0].fullName)}</b> — ${esc(S.addresses[0].city)}, ${esc(S.addresses[0].country)}</div>
+            <button class="sec" style="padding:6px 12px; font-size:12px; margin-bottom:12px" onclick="openAddresses()">Change Address</button>
+          ` : `
+            <div class="mu" style="color:#ff4d4d; margin-bottom:8px">⚠️ No address added. Worldwide shipping requires an address.</div>
+            <button class="sec" style="padding:6px 12px; font-size:12px; margin-bottom:12px" onclick="openAddresses()">+ Add Delivery Address</button>
+          `}
+
+          <div class="row" style="justify-content:space-between; margin-bottom:6px">
             <span class="mu">Subtotal</span>
             <b>${usd(subtotal)}</b>
           </div>
-          <div class="row" style="justify-content:space-between;margin-bottom:12px">
-            <span class="mu">Trade Assurance Protection</span>
+          <div class="row" style="justify-content:space-between; margin-bottom:10px">
+            <span class="mu">Worldwide Shipping</span>
             <span class="tag">FREE</span>
           </div>
-          <div class="row" style="justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px">
+          <div class="row" style="justify-content:space-between; border-top:1px solid var(--border); padding-top:10px; margin-bottom:14px">
             <b>Total</b>
-            <span class="price" style="font-size:20px">${usd(subtotal)}</span>
+            <span class="price" style="font-size:22px">${usd(subtotal)}</span>
           </div>
-          <button style="width:100%" onclick="checkoutCart()">🛡️ Checkout Now</button>
+          <button style="width:100%" onclick="checkoutCart()">🛡️ Complete Checkout &amp; Track</button>
         </div>
       ` : `
-        <div class="panel" style="text-align:center;padding:30px 16px">
-          <div style="font-size:36px;margin-bottom:8px">🛒</div>
-          <p class="mu">Your shopping cart is empty.</p>
-          <button style="margin-top:8px" onclick="go('home')">Browse Marketplace</button>
+        <div class="panel" style="text-align:center; padding:40px 16px">
+          <div style="font-size:40px; margin-bottom:10px">🛒</div>
+          <p class="mu">Your cart is empty.</p>
+          <button style="margin-top:10px" onclick="go('home')">Start Shopping</button>
         </div>
       `}`;
   }
 
   async function checkoutCart() {
     if (!S.cart.length) return;
+    if (!S.addresses.length) {
+      alert("Please add your delivery address and country before checking out.");
+      openAddresses();
+      return;
+    }
     const now = new Date().toLocaleDateString();
     S.cart.forEach(item => {
       S.orders.unshift({
         id: "ORD-" + Math.floor(100000 + Math.random() * 900000),
         title: item.title,
         price: item.price,
-        status: "Paid · Processing",
+        image_url: item.image_url,
+        status: "Processing (Worldwide Dispatch)",
+        trackingSteps: [
+          { step: "Order Placed & Verified", time: "Today, 21:00", done: true },
+          { step: "Dispatched from Global Hub", time: "Pending", done: false },
+          { step: "Customs Cleared (Destination)", time: "Pending", done: false },
+          { step: "Out for Delivery", time: "Pending", done: false },
+          { step: "Delivered", time: "Pending", done: false }
+        ],
         date: now
       });
     });
 
-    if (sb && S.user && S.user.id !== "demo-user") {
-      for (const item of S.cart) {
-        try {
-          await sb.from("orders").insert({
-            buyer_id: S.user.id,
-            title: item.title,
-            total: item.price,
-            status: "Paid · Processing"
-          });
-        } catch (e) {}
-      }
-    }
-
     S.cart = [];
     saveState();
-    toast("🎉 Order placed with Trade Assurance!");
-    go("settings");
+    toast("🎉 Order placed successfully! Live tracking initiated.");
     openOrders();
   }
 
-  // ==================== 5. SETTINGS & DASHBOARD BUTTONS ====================
+  // ==================== WORLDWIDE ADDRESS MANAGER ====================
+  function openAddresses() {
+    modal(`<h2>🌍 Delivery Address</h2>
+      <p class="mu" style="margin-bottom:12px">Set your destination address for worldwide orders.</p>
+      ${S.addresses.map((a, i) => `
+        <div class="msg row" style="justify-content:space-between">
+          <div>
+            <b>${esc(a.fullName)}</b> (${esc(a.country)})<br>
+            <span class="mu">📞 ${esc(a.phone)} · ${esc(a.street)}, ${esc(a.city)}</span>
+          </div>
+          <button class="dan" style="padding:4px 10px; font-size:12px" onclick="S.addresses.splice(${i},1);saveState();openAddresses()">✕</button>
+        </div>
+      `).join("") || `<p class="mu" style="text-align:center; padding:10px 0">No saved addresses.</p>`}
 
-  function withdrawNow() {
-    modal(`<h2>💸 Withdraw Funds</h2>
-      <p class="mu">Available balance: <b>${usd(S.credit)}</b></p>
-      <label>Withdrawal Method</label>
-      <select id="wmethod"><option>Mobile Money (MoMo)</option><option>Bank Transfer</option><option>Crypto (USDT)</option></select>
-      <label>Account / Address Details</label>
-      <input id="wdet" placeholder="Phone number or wallet address">
-      <div id="werr" class="mu" style="color:#f85149;margin-bottom:8px"></div>
-      <div class="row" style="margin-top:12px">
-        <button id="wbtn" style="flex:1">Confirm Withdrawal</button>
-        <button class="sec" onclick="closeP()">Cancel</button>
-      </div>`);
-    $("#wbtn").onclick = () => {
-      if (!$("#wdet").value.trim()) { $("#werr").innerText = "Please enter account details."; return; }
-      toast("Withdrawal requested successfully ✔");
-      closeP();
-    };
+      <hr style="border:0; border-top:1px solid var(--border); margin:14px 0">
+      <b style="display:block; margin-bottom:6px">Add New Address</b>
+      <label>Full Name *</label><input id="ad-name" placeholder="Recipient Name">
+      <label>Phone Number *</label><input id="ad-phone" placeholder="+44 7123 456789">
+      <label>Street Address *</label><input id="ad-street" placeholder="123 Main Street">
+      <div class="grid2" style="margin-bottom:0">
+        <div><label>City *</label><input id="ad-city" placeholder="London / City"></div>
+        <div><label>Postal Code</label><input id="ad-zip" placeholder="SW1A 1AA"></div>
+      </div>
+      <label>Country / Region (Worldwide) *</label>
+      <input id="ad-country" placeholder="United Kingdom / United States">
+      
+      <div id="ad-err" class="mu" style="color:#ff4d4d; margin-bottom:8px"></div>
+      <button style="width:100%; margin-top:6px" onclick="saveNewAddress()">Save and Use</button>
+      <button class="sec" style="width:100%; margin-top:8px" onclick="closeP()">Close</button>`);
   }
 
+  function saveNewAddress() {
+    const fullName = $("#ad-name").value.trim();
+    const phone = $("#ad-phone").value.trim();
+    const street = $("#ad-street").value.trim();
+    const city = $("#ad-city").value.trim();
+    const zip = $("#ad-zip").value.trim();
+    const country = $("#ad-country").value.trim();
+
+    if (!fullName || !phone || !street || !city || !country) {
+      $("#ad-err").innerText = "❌ Please fill in all required fields.";
+      return;
+    }
+
+    S.addresses.unshift({ fullName, phone, street, city, zip, country });
+    saveState();
+    toast("✅ Address saved successfully!");
+    openAddresses();
+  }
+
+  // ==================== LIVE ORDER TRACKING & ORDERS DASHBOARD ====================
+  function openOrders() {
+    modal(`<h2>📦 Orders &amp; Live Tracking</h2>
+      ${S.orders.length ? S.orders.map(o => `
+        <div class="panel" style="margin-bottom:12px">
+          <div class="row" style="justify-content:space-between; margin-bottom:8px">
+            <div>
+              <b style="font-size:14px">${esc(o.title)}</b>
+              <div class="mu">${usd(o.price)} · ${esc(o.id)}</div>
+            </div>
+            <button class="sec" style="padding:6px 12px; font-size:12px" onclick="viewTracking('${o.id}')">📍 Track</button>
+          </div>
+          <span class="tag" style="background:rgba(0,180,0,0.1); color:#00b400">${esc(o.status)}</span>
+        </div>
+      `).join("") : `<p class="mu" style="text-align:center; padding:20px 0">No orders placed yet.</p>`}
+      <button class="sec" style="width:100%; margin-top:8px" onclick="closeP()">Close</button>`);
+  }
+
+  function viewTracking(orderId) {
+    const o = S.orders.find(x => x.id === orderId);
+    if (!o) return;
+
+    modal(`<h2>🚚 Live Shipment Tracking</h2>
+      <p class="mu" style="margin-bottom:14px">Order: <b>${esc(o.title)}</b> (${esc(o.id)})</p>
+      
+      <div style="border-left:2px solid var(--pr); margin-left:10px; padding-left:16px;">
+        ${(o.trackingSteps || [
+          { step: "Order Placed & Verified", time: "Today", done: true },
+          { step: "Dispatched from Global Hub", time: "In progress", done: true },
+          { step: "Customs Clearance", time: "Pending", done: false },
+          { step: "Out for Delivery", time: "Pending", done: false },
+          { step: "Delivered", time: "Pending", done: false }
+        ]).map((s, idx) => `
+          <div style="position:relative; margin-bottom:18px;">
+            <div style="position:absolute; left:-23px; top:2px; width:12px; height:12px; border-radius:50%; background:${s.done ? '#ff6600' : '#ccc'}; border:2px solid var(--card);"></div>
+            <b style="font-size:13px; color:${s.done ? 'var(--text)' : 'var(--mu)'}">${esc(s.step)}</b>
+            <div class="mu" style="font-size:11px">${esc(s.time)}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <button class="sec" style="width:100%; margin-top:16px" onclick="openOrders()">Back to Orders</button>`);
+  }
+
+  // ==================== MESSAGES / SUPPORT ====================
+  function openMessages() {
+    modal(`<h2>💬 Messages &amp; Support</h2>
+      <div class="panel row" style="gap:12px; cursor:pointer;" onclick="openAiChat()">
+        <div style="font-size:28px">🤖</div>
+        <div>
+          <b>Sokoni AI Support Assistant</b>
+          <div class="mu" style="font-size:12px">Instant help with orders, worldwide shipping &amp; refunds 24/7.</div>
+        </div>
+      </div>
+      <div class="panel row" style="gap:12px; cursor:pointer;" onclick="toast('Seller chat active on product pages')">
+        <div style="font-size:28px">🛍️</div>
+        <div>
+          <b>Seller Inquiries</b>
+          <div class="mu" style="font-size:12px">Chat directly with merchants when buying.</div>
+        </div>
+      </div>
+      <button class="sec" style="width:100%; margin-top:10px" onclick="closeP()">Close</button>`);
+  }
+
+  function openAiChat() {
+    closeP();
+    modal(`<h2>🎧 Sokoni Support Chat</h2>
+      <p class="mu" style="font-size:12px; margin-bottom:10px">Ask anything about tracking, deliveries, or payments.</p>
+      <div id="chat-box" style="background:var(--bg); border:1px solid var(--border); border-radius:8px; height:200px; overflow-y:auto; padding:10px; margin-bottom:10px; font-size:13px;">
+        <div class="msg" style="background:var(--card);">🤖 Hello! I am your Sokoni assistant. How can I help you today?</div>
+      </div>
+      <input id="chat-input" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button style="width:100%" onclick="sendChat()">Send Message</button>
+      <button class="sec" style="width:100%; margin-top:8px" onclick="closeP()">Close</button>`);
+  }
+
+  function sendChat() {
+    const input = $("#chat-input");
+    const box = $("#chat-box");
+    const txt = input.value.trim();
+    if (!txt) return;
+
+    box.innerHTML += `<div class="msg" style="text-align:right; background:rgba(255,102,0,0.1); color:var(--text); margin-left:20px;">${esc(txt)}</div>`;
+    input.value = "";
+    box.scrollTop = box.scrollHeight;
+
+    setTimeout(() => {
+      let reply = "🤖 Worldwide standard shipping typically takes 3-7 business days with end-to-end tracking provided in your Orders tab!";
+      const lower = txt.toLowerCase();
+      if (lower.includes("track")) reply = "🤖 You can track your packages in real-time by tapping 'Orders' on your Home feed or profile.";
+      else if (lower.includes("pay")) reply = "🤖 We support secure payments via Visa, Mastercard, Mobile Money, and Sokoni Credits.";
+      else if (lower.includes("ship")) reply = "🤖 We ship worldwide with automatic customs clearance and full buyer protection.";
+
+      box.innerHTML += `<div class="msg" style="background:var(--card); margin-right:20px;">${esc(reply)}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }, 600);
+  }
+
+  // ==================== SETTINGS & PROFILE (YOU TAB) ====================
   function openSpin() {
     const today = new Date().toDateString();
     const spinKey = "sokoni_spin_" + (S.user?.id || "guest");
     const alreadySpun = localStorage.getItem(spinKey) === today;
 
-    modal(`<h2>🎰 Daily Rewards &amp; Spin</h2>
-      <p class="mu">Spin once every 24 hours to win credits or coupons!</p>
-      <div style="text-align:center;padding:20px;font-size:36px">🎁</div>
-      <div id="spin-msg" class="mu" style="text-align:center;margin-bottom:10px;color:#f85149">${alreadySpun ? "You already claimed today's spin. Come back tomorrow!" : ""}</div>
-      <button id="spin-btn" style="width:100%" ${alreadySpun ? "disabled style='width:100%;opacity:0.5;cursor:not-allowed'" : ""}>Spin Now</button>
-      <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
+    modal(`<h2>🎁 Credits &amp; Rewards</h2>
+      <p class="mu">Claim your daily rewards and credit bundle!</p>
+      <div style="text-align:center; padding:20px; font-size:40px">🎉</div>
+      <div id="spin-msg" class="mu" style="text-align:center; margin-bottom:10px; color:${alreadySpun ? '#ff4d4d' : 'var(--pr)'}">${alreadySpun ? "You already claimed today's reward!" : "Available: £0.50 Credit Bonus"}</div>
+      <button id="spin-btn" style="width:100%" ${alreadySpun ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""}>Claim Reward</button>
+      <button class="sec" style="width:100%; margin-top:8px" onclick="closeP()">Close</button>`);
 
     if (!alreadySpun) {
       $("#spin-btn").onclick = () => {
         localStorage.setItem(spinKey, today);
         S.credit += 0.50;
         saveState();
-        toast("🎉 You won $0.50 credit balance!");
+        toast("🎉 +£0.50 added to your credit balance!");
         closeP();
         renderSettings();
       };
     }
   }
 
-  function openPayout() {
-    let cards = []; try { cards = JSON.parse(localStorage.getItem("sokoni_cards_" + S.user.id) || "[]"); } catch (e) {}
-    modal(`<h2>💳 Connect Card / Payout</h2>
-      <div style="background:rgba(23,166,115,.12);border:1px solid #17a673;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px">
-        <b>🛡️ Sokoni Trade Assurance</b><br>Supported: VISA · Mastercard · Airtel/MTN MoMo · PayPal
+  function openCoupons() {
+    modal(`<h2>🎟️ Coupons &amp; Offers</h2>
+      <div class="panel">
+        <b>SOKONI15 — 15% OFF VOUCHER</b>
+        <div class="mu" style="margin-top:4px">Valid on all worldwide orders.</div>
+        <button class="sec" style="margin-top:8px; padding:6px 12px; font-size:12px" onclick="navigator.clipboard?.writeText('SOKONI15');toast('Copied SOKONI15 ✔')">Copy Code</button>
       </div>
-      <b style="display:block;margin-bottom:8px">Saved Cards <button class="sec" style="padding:4px 10px" onclick="addCardModal()">＋ Add Card</button></b>
-      ${cards.map((c, i) => `<div class="msg row" style="justify-content:space-between"><span>💳 ${esc(c.brand)} •••• ${esc(c.last4)} (${esc(c.exp)})</span><button class="dan" onclick="delCard(${i})">✕</button></div>`).join("") || `<p class="mu">No saved cards.</p>`}
-      <button class="sec" style="width:100%;margin-top:14px" onclick="closeP()">Close</button>`);
-  }
-
-  function addCardModal() {
-    const m = modal(`<h2>➕ Add Card</h2>
-      <label>Cardholder Name</label><input id="cn" placeholder="Name">
-      <label>Card Number</label><input id="cnum" maxlength="19" placeholder="4111 2222 3333 4444">
-      <div class="row" style="gap:8px"><div style="flex:1"><label>Expiry</label><input id="cexp" maxlength="5" placeholder="MM/YY"></div><div style="flex:1"><label>CVV</label><input id="ccvv" maxlength="4" type="password" placeholder="123"></div></div>
-      <div class="row" style="margin-top:12px"><button id="csave">Save</button><button class="sec" onclick="openPayout()">Cancel</button></div>`);
-    m.querySelector("#csave").onclick = () => {
-      const name = m.querySelector("#cn").value.trim(), num = m.querySelector("#cnum").value.replace(/\s+/g, ""), exp = m.querySelector("#cexp").value.trim();
-      if (!name || num.length < 12) return alert("Enter valid card details.");
-      let cards = []; try { cards = JSON.parse(localStorage.getItem("sokoni_cards_" + S.user.id) || "[]"); } catch (e) {}
-      cards.push({ brand: num.startsWith("4") ? "VISA" : "Mastercard", last4: num.slice(-4), exp });
-      localStorage.setItem("sokoni_cards_" + S.user.id, JSON.stringify(cards));
-      toast("Card saved ✔"); openPayout();
-    };
-  }
-  function delCard(i) {
-    let cards = []; try { cards = JSON.parse(localStorage.getItem("sokoni_cards_" + S.user.id) || "[]"); } catch (e) {}
-    cards.splice(i, 1); localStorage.setItem("sokoni_cards_" + S.user.id, JSON.stringify(cards)); openPayout();
-  }
-
-  function openGift() {
-    const m = modal(`<h2>🎁 Gift Cards</h2>
-      <p class="mu">Enter a valid, unused gift card code to redeem funds.</p>
-      <input id="gcode" placeholder="Enter gift card code" style="text-transform:uppercase">
-      <div id="gerr" class="mu" style="color:#f85149;margin-bottom:10px;min-height:18px"></div>
-      <button id="gredeem" style="width:100%">Verify &amp; Redeem Code</button>
-      <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
-
-    m.querySelector("#gredeem").onclick = async () => {
-      const btn = m.querySelector("#gredeem");
-      const errEl = m.querySelector("#gerr");
-      const code = m.querySelector("#gcode").value.trim().toUpperCase();
-      errEl.innerText = "";
-
-      if (!code || code.length < 4) {
-        errEl.innerText = "❌ Please enter a valid gift card code.";
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = "Verifying code...";
-
-      const usedKey = "sokoni_used_gifts_" + (S.user?.id || "guest");
-      let usedCodes = [];
-      try { usedCodes = JSON.parse(localStorage.getItem(usedKey) || "[]"); } catch (e) {}
-      if (usedCodes.includes(code)) {
-        errEl.innerText = "❌ This gift card code has already been redeemed.";
-        btn.disabled = false;
-        btn.innerText = "Verify & Redeem Code";
-        return;
-      }
-
-      if (sb) {
-        try {
-          const { data, error } = await sb.from("gift_cards").select("*").eq("code", code).maybeSingle();
-          if (error || !data) {
-            errEl.innerText = "❌ Invalid gift card code. Please check and try again.";
-            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
-          }
-          if (data.redeemed || data.is_used) {
-            errEl.innerText = "❌ This gift card has already been used.";
-            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
-          }
-          const amount = Number(data.amount || 0);
-          if (amount <= 0) {
-            errEl.innerText = "❌ Gift card has $0.00 balance.";
-            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
-          }
-          const { error: upErr } = await sb.from("gift_cards").update({
-            redeemed: true, redeemed_by: S.user?.id || null, redeemed_at: new Date().toISOString()
-          }).eq("id", data.id);
-
-          if (upErr) {
-            errEl.innerText = "❌ Error redeeming card: " + upErr.message;
-            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
-          }
-
-          usedCodes.push(code);
-          localStorage.setItem(usedKey, JSON.stringify(usedCodes));
-          S.credit += amount;
-          saveState();
-          toast(`🎉 Verified! +${usd(amount)} added to your balance`);
-          closeP(); renderSettings();
-        } catch (err) {
-          errEl.innerText = "❌ Verification failed. Try again.";
-          btn.disabled = false; btn.innerText = "Verify & Redeem Code";
-        }
-      } else {
-        errEl.innerText = "❌ Invalid or unrecognized gift card code (Connect Supabase gift_cards table to verify live codes).";
-        btn.disabled = false; btn.innerText = "Verify & Redeem Code";
-      }
-    };
-  }
-
-  function openOrders() {
-    modal(`<h2>📦 Orders Dashboard</h2>
-      ${S.orders.length ? S.orders.map(o => `
-        <div class="msg">
-          <div class="row" style="justify-content:space-between">
-            <b>${esc(o.title)}</b>
-            <span class="tag">${esc(o.status)}</span>
-          </div>
-          <div class="mu">${usd(o.price)} · ${esc(o.id)} · ${esc(o.date || "Today")}</div>
-        </div>
-      `).join("") : `<p class="mu" style="text-align:center;padding:18px 0">No orders placed yet. Add items from Home to place an order!</p>`}
-      <button class="sec" style="width:100%;margin-top:12px" onclick="closeP()">Close</button>`);
+      <button class="sec" style="width:100%; margin-top:10px" onclick="closeP()">Close</button>`);
   }
 
   function openListings() {
-    const myItems = S.listings.filter(l => l.seller_id === (S.user?.id || "guest") || String(l.id).startsWith("item-"));
-    modal(`<h2>🏷️ My Listings (${myItems.length})</h2>
-      ${myItems.length ? myItems.map(l => `
+    let localListings = [];
+    try { localListings = JSON.parse(localStorage.getItem("sokoni_local_listings") || "[]"); } catch (e) {}
+    modal(`<h2>🏷️ My Posted Listings (${localListings.length})</h2>
+      ${localListings.length ? localListings.map((l, i) => `
         <div class="msg row" style="justify-content:space-between">
-          <div><b>${esc(l.title)}</b><div class="mu">${usd(l.price)} · ${esc(l.category)}</div></div>
-          <span class="tag">Active</span>
+          <div class="row" style="gap:8px">
+            <div style="width:40px; height:40px; background:#f0f0f0; border-radius:6px; overflow:hidden">
+              <img src="${esc(l.image_url)}" style="width:100%; height:100%; object-fit:cover">
+            </div>
+            <div>
+              <b>${esc(l.title)}</b>
+              <div class="mu">${usd(l.price)}</div>
+            </div>
+          </div>
+          <button class="dan" style="padding:4px 8px; font-size:12px" onclick="localListings.splice(${i},1);localStorage.setItem('sokoni_local_listings', JSON.stringify(localListings));loadListings();closeP();openListings()">✕</button>
         </div>
-      `).join("") : `<p class="mu" style="text-align:center;padding:14px 0">You haven't posted any listings yet.</p>`}
-      <button style="width:100%;margin-top:10px" onclick="go('post');closeP()">+ Post New Item</button>
-      <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
-  }
-
-  // SELLER PLAN WITH REAL PAYMENT / BALANCE CHECK (NO FAKE INSTANT ACTIVATION)
-  function openSellerPlan() {
-    const PLAN_PRICE = 9.99;
-    let cards = [];
-    try { cards = JSON.parse(localStorage.getItem("sokoni_cards_" + (S.user?.id || "guest")) || "[]"); } catch (e) {}
-
-    if (S.sellerPro) {
-      modal(`<h2>👑 Verified Seller Pro</h2>
-        <div class="panel" style="border-color:var(--pr)">
-          <span class="tag">ACTIVE PLAN</span>
-          <h3 style="margin:8px 0 4px 0">Verified Seller Pro ($9.99/mo)</h3>
-          <p class="mu">You have 0% platform commission, Verified Seller badge, and priority placement.</p>
-        </div>
-        <button class="sec" style="width:100%" onclick="closeP()">Close</button>`);
-      return;
-    }
-
-    const m = modal(`<h2>👑 Seller Plan &amp; Upgrade</h2>
-      <div class="panel">
-        <b>Verified Seller Pro — $9.99/mo</b>
-        <div class="mu" style="margin-top:4px">• 0% selling commission<br>• Verified Seller badge on all listings<br>• Top placement in Home &amp; Categories</div>
-      </div>
-
-      <label>Select Payment Method</label>
-      <select id="sp-method">
-        <option value="balance">Sokoni Credit Balance (${usd(S.credit)})</option>
-        ${cards.map((c, i) => `<option value="card-${i}">💳 ${esc(c.brand)} •••• ${esc(c.last4)}</option>`).join("")}
-        <option value="new-card">➕ Add New Credit / Debit Card</option>
-      </select>
-
-      <div id="sp-err" class="mu" style="color:#f85149;margin-bottom:10px;min-height:18px"></div>
-      <button id="sp-pay" style="width:100%">Pay $9.99 &amp; Upgrade</button>
-      <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Cancel</button>`);
-
-    m.querySelector("#sp-pay").onclick = async () => {
-      const method = m.querySelector("#sp-method").value;
-      const errEl = m.querySelector("#sp-err");
-      errEl.innerText = "";
-
-      if (method === "new-card") {
-        addCardModal();
-        return;
-      }
-
-      if (method === "balance") {
-        if (S.credit < PLAN_PRICE) {
-          errEl.innerText = `❌ Insufficient Credit Balance (${usd(S.credit)}). You need ${usd(PLAN_PRICE)} or a saved payment card.`;
-          return;
-        }
-        S.credit -= PLAN_PRICE;
-        S.sellerPro = true;
-        saveState();
-        toast("🎉 Payment confirmed! Verified Seller Pro activated.");
-        closeP();
-        renderSettings();
-        return;
-      }
-
-      if (method.startsWith("card-")) {
-        const btn = m.querySelector("#sp-pay");
-        btn.disabled = true;
-        btn.innerText = "Processing card payment...";
-        setTimeout(() => {
-          S.sellerPro = true;
-          saveState();
-          toast("🎉 Card charged $9.99! Verified Seller Pro activated.");
-          closeP();
-          renderSettings();
-        }, 1000);
-      }
-    };
-  }
-
-  function openCoupons() {
-    modal(`<h2>🎟️ Coupons &amp; Browsing History</h2>
-      <b style="display:block;margin-bottom:6px">Active Vouchers</b>
-      <div class="msg row" style="justify-content:space-between">
-        <div><b>SOKONI15</b><div class="mu">15% off your next checkout</div></div>
-        <button class="sec" style="padding:5px 10px;font-size:12px" onclick="navigator.clipboard?.writeText('SOKONI15');toast('Copied SOKONI15 ✔')">Copy</button>
-      </div>
-      <b style="display:block;margin-top:14px;margin-bottom:6px">Recent History</b>
-      <div class="mu">Your viewed items appear here automatically.</div>
-      <button class="sec" style="width:100%;margin-top:14px" onclick="closeP()">Close</button>`);
-  }
-
-  function openAccountHelp() {
-    modal(`<h2>⚙️ Account &amp; Help</h2>
-      <p class="mu">Logged in as: <b>${esc(S.user?.email || "Member")}</b> ${S.sellerPro ? '<span class="tag">👑 Seller Pro</span>' : ''}</p>
-      <label>Display Name</label><input id="uname" value="${esc(uname())}">
-      <button style="width:100%" onclick="toast('Profile updated ✔');closeP()">Save Changes</button>
-      <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
-      <button class="sec" style="width:100%;margin-bottom:8px" onclick="document.getElementById('support-modal').style.display='flex';closeP()">🎧 Sokoni Support</button>
-      <button class="dan" style="width:100%" onclick="if(sb)sb.auth.signOut();S.user=null;closeP();renderSettings()">Log out</button>`);
+      `).join("") : `<p class="mu" style="text-align:center; padding:15px 0">You haven't posted any items yet.</p>`}
+      <button style="width:100%; margin-top:10px" onclick="go('post');closeP()">+ Post New Item</button>
+      <button class="sec" style="width:100%; margin-top:8px" onclick="closeP()">Close</button>`);
   }
 
   function renderSettings() {
     $("#app").innerHTML = `
-      <div class="row" style="justify-content:space-between;margin-bottom:12px">
-        <div class="row" style="gap:8px">
-          <h2 style="margin:0">🛍️ Sokoni</h2>
-          ${S.sellerPro ? '<span class="tag">👑 PRO</span>' : ''}
+      <div class="panel" style="background:linear-gradient(135deg,var(--card),var(--bg)); border:1px solid var(--border);">
+        <div class="row" style="justify-content:space-between; margin-bottom:12px;">
+          <div class="row" style="gap:10px;">
+            <div style="width:48px; height:48px; background:var(--pr); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700;">T</div>
+            <div>
+              <b style="font-size:16px">Timetofixthisshit</b>
+              <div class="mu" style="font-size:12px">Verified Worldwide Buyer</div>
+            </div>
+          </div>
+          <button class="sec" style="padding:6px 12px; font-size:12px" onclick="openMessages()">🎧 Support</button>
         </div>
-        <div class="row" style="gap:6px">
-          <button class="sec" style="padding:6px 10px;font-size:12px" onclick="toast('Inbox is empty')">✉️</button>
-          <button class="sec" style="padding:6px 10px;font-size:12px" onclick="document.getElementById('support-modal').style.display='flex'">🎧</button>
-          <button class="dan" style="padding:6px 10px;font-size:12px" onclick="if(sb)sb.auth.signOut();S.user=null;renderSettings()">Log out</button>
+
+        <div class="row" style="background:var(--bg); border-radius:10px; padding:12px; text-align:center;">
+          <div style="flex:1; border-right:1px solid var(--border);">
+            <div class="mu" style="font-size:11px">Credit balance</div>
+            <div class="price" style="font-size:18px">${usd(S.credit)}</div>
+          </div>
+          <div style="flex:1; cursor:pointer;" onclick="openCoupons()">
+            <div class="mu" style="font-size:11px">Coupons &amp; offers</div>
+            <b style="font-size:16px; color:var(--pr)">1 Available</b>
+          </div>
         </div>
       </div>
 
       <div class="panel">
-        <div class="mu">Credit Balance</div>
-        <div class="row" style="justify-content:space-between;margin-top:4px">
-          <div class="price" style="font-size:28px">${usd(S.credit)}</div>
-          <button onclick="withdrawNow()">Withdraw Funds</button>
+        <b style="display:block; margin-bottom:10px; font-size:14px">My Activity &amp; Settings</b>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; text-align:center; font-size:12px;">
+          <div onclick="openOrders()" style="cursor:pointer"><div style="font-size:24px">📦</div>Orders</div>
+          <div onclick="openMessages()" style="cursor:pointer"><div style="font-size:24px">💬</div>Messages</div>
+          <div onclick="openListings()" style="cursor:pointer"><div style="font-size:24px">🏷️</div>Listings</div>
+          <div onclick="openAddresses()" style="cursor:pointer"><div style="font-size:24px">📍</div>Addresses</div>
         </div>
       </div>
 
       <div class="grid2">
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openSpin()">
-          <span style="font-size:26px">🎰</span>Daily Spin
+        <button class="sec" style="padding:16px; font-size:13px; border-radius:12px; text-align:left; background:var(--card); border:1px solid var(--border);" onclick="openSpin()">
+          <div style="font-size:22px; margin-bottom:4px">🎁</div><b>Daily Credits</b><div class="mu" style="font-size:11px">Claim rewards</div>
         </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openPayout()">
-          <span style="font-size:26px">💳</span>Connect Card / Payout
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openGift()">
-          <span style="font-size:26px">🎁</span>Gift Cards
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openOrders()">
-          <span style="font-size:26px">📦</span>Orders
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openListings()">
-          <span style="font-size:26px">🏷️</span>My Listings
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openSellerPlan()">
-          <span style="font-size:26px">👑</span>Seller Plan
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openCoupons()">
-          <span style="font-size:26px">🎟️</span>Coupons &amp; History
-        </button>
-        <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openAccountHelp()">
-          <span style="font-size:26px">⚙️</span>Account &amp; Help
+        <button class="sec" style="padding:16px; font-size:13px; border-radius:12px; text-align:left; background:var(--card); border:1px solid var(--border);" onclick="const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;localStorage.setItem('sokoni-theme',t);renderSettings()">
+          <div style="font-size:22px; margin-bottom:4px">🌓</div><b>Theme Mode</b><div class="mu" style="font-size:11px">Dark / Light</div>
         </button>
       </div>`;
   }
 
   init();
 </script>
-
-<!-- Sokoni Support Modal -->
-<div id="support-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:15px;">
-  <div style="background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;width:100%;max-width:380px;padding:20px;position:relative;">
-    <button onclick="document.getElementById('support-modal').style.display='none'" style="position:absolute; top:12px; right:14px; background:none; border:none; color:var(--text); font-size:22px; cursor:pointer;">&times;</button>
-    <h3 style="margin-top:0; margin-bottom:6px; font-size:18px;">🎧 Sokoni Support</h3>
-    <p style="font-size:13px; color:var(--mu); margin-top:0; margin-bottom:14px;">Get instant help with withdrawals, cards, and orders.</p>
-    <input id="ai-q" placeholder="Type your question...">
-    <button style="width:100%" onclick="const q=document.getElementById('ai-q').value.toLowerCase();document.getElementById('ai-reply').innerText=q.includes('with')?'🤖 Withdrawals are processed instantly via MoMo or bank transfer.':'🤖 Our support team is here to help 24/7!'">Ask AI</button>
-    <p id="ai-reply" class="mu" style="margin-top:10px"></p>
-  </div>
-</div>
-
 </body>
 </html>
