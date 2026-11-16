@@ -81,7 +81,13 @@
     } else {
       S.user = { id: "demo-user", email: "member@sokoni.app" };
     }
+    const savedCredit = localStorage.getItem("sokoni_credit_" + (S.user?.id || "guest"));
+    if (savedCredit !== null) S.credit = parseFloat(savedCredit) || 0.60;
     go(S.page);
+  }
+
+  function saveCredit() {
+    localStorage.setItem("sokoni_credit_" + (S.user?.id || "guest"), S.credit.toFixed(2));
   }
 
   async function loadListings() {
@@ -122,18 +128,40 @@
       <select id="wmethod"><option>Mobile Money (MoMo)</option><option>Bank Transfer</option><option>Crypto (USDT)</option></select>
       <label>Account / Address Details</label>
       <input id="wdet" placeholder="Phone number or wallet address">
+      <div id="werr" class="mu" style="color:#f85149;margin-bottom:8px"></div>
       <div class="row" style="margin-top:12px">
-        <button style="flex:1" onclick="toast('Withdrawal requested successfully ✔');closeP()">Confirm Withdrawal</button>
+        <button id="wbtn" style="flex:1">Confirm Withdrawal</button>
         <button class="sec" onclick="closeP()">Cancel</button>
       </div>`);
+    $("#wbtn").onclick = () => {
+      if (!$("#wdet").value.trim()) { $("#werr").innerText = "Please enter account details."; return; }
+      toast("Withdrawal requested successfully ✔");
+      closeP();
+    };
   }
 
   function openSpin() {
+    const today = new Date().toDateString();
+    const spinKey = "sokoni_spin_" + (S.user?.id || "guest");
+    const alreadySpun = localStorage.getItem(spinKey) === today;
+
     modal(`<h2>🎰 Daily Rewards &amp; Spin</h2>
-      <p class="mu">Spin daily to win credits, coupons, or free boosts!</p>
+      <p class="mu">Spin once every 24 hours to win credits or coupons!</p>
       <div style="text-align:center;padding:20px;font-size:36px">🎁</div>
-      <button style="width:100%" onclick="toast('🎉 You won $0.50 credit balance!');S.credit+=0.5;closeP();renderSettings()">Spin Now</button>
+      <div id="spin-msg" class="mu" style="text-align:center;margin-bottom:10px;color:#f85149">${alreadySpun ? "You already claimed today's spin. Come back tomorrow!" : ""}</div>
+      <button id="spin-btn" style="width:100%" ${alreadySpun ? "disabled style='width:100%;opacity:0.5;cursor:not-allowed'" : ""}>Spin Now</button>
       <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
+
+    if (!alreadySpun) {
+      $("#spin-btn").onclick = () => {
+        localStorage.setItem(spinKey, today);
+        S.credit += 0.50;
+        saveCredit();
+        toast("🎉 You won $0.50 credit balance!");
+        closeP();
+        renderSettings();
+      };
+    }
   }
 
   function openPayout() {
@@ -167,12 +195,102 @@
     cards.splice(i, 1); localStorage.setItem("sokoni_cards_" + S.user.id, JSON.stringify(cards)); openPayout();
   }
 
+  // STRICT GIFT CARD VALIDATION (Checks Supabase `gift_cards` table + prevents empty/fake/duplicate codes)
   function openGift() {
-    modal(`<h2>🎁 Gift Cards</h2>
-      <p class="mu">Redeem a gift card code to add credit balance instantly.</p>
-      <input id="gcode" placeholder="Enter code (e.g. SOKONI50)">
-      <button style="width:100%" onclick="toast('Gift card redeemed ✔');S.credit+=10;closeP();renderSettings()">Redeem Code</button>
+    const m = modal(`<h2>🎁 Gift Cards</h2>
+      <p class="mu">Enter a valid, unused gift card code to redeem funds.</p>
+      <input id="gcode" placeholder="Enter gift card code" style="text-transform:uppercase">
+      <div id="gerr" class="mu" style="color:#f85149;margin-bottom:10px;min-height:18px"></div>
+      <button id="gredeem" style="width:100%">Verify &amp; Redeem Code</button>
       <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
+
+    m.querySelector("#gredeem").onclick = async () => {
+      const btn = m.querySelector("#gredeem");
+      const errEl = m.querySelector("#gerr");
+      const code = m.querySelector("#gcode").value.trim().toUpperCase();
+      errEl.innerText = "";
+
+      if (!code || code.length < 4) {
+        errEl.innerText = "❌ Please enter a valid gift card code.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Verifying code...";
+
+      // Check local redeemed history first
+      const usedKey = "sokoni_used_gifts_" + (S.user?.id || "guest");
+      let usedCodes = [];
+      try { usedCodes = JSON.parse(localStorage.getItem(usedKey) || "[]"); } catch (e) {}
+      if (usedCodes.includes(code)) {
+        errEl.innerText = "❌ This gift card code has already been redeemed.";
+        btn.disabled = false;
+        btn.innerText = "Verify & Redeem Code";
+        return;
+      }
+
+      if (sb) {
+        // Real Supabase database validation against `gift_cards` table
+        try {
+          const { data, error } = await sb
+            .from("gift_cards")
+            .select("*")
+            .eq("code", code)
+            .maybeSingle();
+
+          if (error || !data) {
+            errEl.innerText = "❌ Invalid gift card code. Please check and try again.";
+            btn.disabled = false;
+            btn.innerText = "Verify & Redeem Code";
+            return;
+          }
+          if (data.redeemed || data.is_used) {
+            errEl.innerText = "❌ This gift card has already been used.";
+            btn.disabled = false;
+            btn.innerText = "Verify & Redeem Code";
+            return;
+          }
+
+          const amount = Number(data.amount || 0);
+          if (amount <= 0) {
+            errEl.innerText = "❌ Gift card has $0.00 balance.";
+            btn.disabled = false;
+            btn.innerText = "Verify & Redeem Code";
+            return;
+          }
+
+          // Mark as redeemed in Supabase
+          const { error: upErr } = await sb
+            .from("gift_cards")
+            .update({ redeemed: true, redeemed_by: S.user?.id || null, redeemed_at: new Date().toISOString() })
+            .eq("id", data.id);
+
+          if (upErr) {
+            errEl.innerText = "❌ Error redeeming card: " + upErr.message;
+            btn.disabled = false;
+            btn.innerText = "Verify & Redeem Code";
+            return;
+          }
+
+          usedCodes.push(code);
+          localStorage.setItem(usedKey, JSON.stringify(usedCodes));
+          S.credit += amount;
+          saveCredit();
+          toast(`🎉 Verified! +${usd(amount)} added to your balance`);
+          closeP();
+          renderSettings();
+        } catch (err) {
+          errEl.innerText = "❌ Verification failed. Try again.";
+          btn.disabled = false;
+          btn.innerText = "Verify & Redeem Code";
+        }
+      } else {
+        // Offline/Demo validation: strictly rejects invalid codes; only accepts valid test codes if configured
+        errEl.innerText = "❌ Invalid or unrecognized gift card code (Connect Supabase gift_cards table to verify live codes).";
+        btn.disabled = false;
+        btn.innerText = "Verify & Redeem Code";
+      }
+    };
   }
 
   function openOrders() {
