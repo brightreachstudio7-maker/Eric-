@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Sokoni – Buy &amp; sell locally</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f6f8ff;--card:#fff;--tx:#1b2140;--mu:#6b7394;--pr:#4f6bff;--pr2:#e8ecff;--bd:#e3e7f5}
+@media (prefers-color-scheme:dark){:root{--bg:#12152b;--card:#1b1f3a;--tx:#eef0ff;--mu:#9aa2c9;--pr:#7b92ff;--pr2:#2a3060;--bd:#2b3157}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:800;font-size:20px;color:var(--pr);cursor:pointer;margin-right:auto}
+button{font:inherit;border:0;border-radius:10px;padding:9px 14px;background:var(--pr);color:#fff;cursor:pointer;font-weight:600}
+button.sec{background:var(--pr2);color:var(--pr)}button.dan{background:#ffe9e5;color:#d6401f}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;width:100%}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}.bar input{flex:2;min-width:180px}.bar select{flex:1;min-width:130px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(79,107,255,.15)}
+.img{aspect-ratio:4/3;background:var(--pr2) center/cover;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:13px}
+.in{padding:12px}.price{font-weight:800;color:var(--pr);font-size:18px}.tag{display:inline-block;background:var(--pr2);color:var(--pr);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600}
+.t{font-weight:600;margin:4px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-bottom:16px}
+.detail{display:grid;gap:20px;grid-template-columns:1fr 1fr}@media(max-width:700px){.detail{grid-template-columns:1fr}}
+.detail .img{border-radius:12px;aspect-ratio:1}
+label{display:block;font-size:13px;color:var(--mu);margin:10px 0 4px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:rgba(10,14,40,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal .panel{width:100%;max-width:460px;max-height:90vh;overflow:auto;margin:0}
+.mu{color:var(--mu);font-size:14px}.empty{text-align:center;padding:48px 16px;color:var(--mu)}.er{color:#d6401f;font-size:14px}
+.msg{border-top:1px solid var(--bd);padding:8px 0}h2{margin:0 0 12px}
+.hero{background:linear-gradient(135deg,var(--pr),#7b5cff);color:#fff;border-radius:20px;padding:28px 20px;margin-bottom:16px}.hero h1{margin:0 0 6px;font-size:26px}.hero p{margin:0;opacity:.92}
+.img{position:relative}.sold{position:absolute;top:8px;left:8px;background:#d6401f;color:#fff;font-weight:800;font-size:12px;padding:3px 10px;border-radius:20px}
+.heart{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:20px;background:var(--card);color:#ff4d6d;font-size:18px}
+body{padding-bottom:76px}
+:root[data-theme="light"]{--bg:#f6f8ff;--card:#fff;--tx:#1b2140;--mu:#6b7394;--pr:#4f6bff;--pr2:#e8ecff;--bd:#e3e7f5}
+:root[data-theme="dark"]{--bg:#12152b;--card:#1b1f3a;--tx:#eef0ff;--mu:#9aa2c9;--pr:#7b92ff;--pr2:#2a3060;--bd:#2b3157}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bd);display:flex;z-index:6;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;background:none;color:var(--mu);border-radius:0;padding:8px 4px;font-size:12px}.tabs button.on{color:var(--pr)}.tabs span{display:block;font-size:20px}
+body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bar input{grid-column:1/-1;min-width:0}.bar select{min-width:0;width:100%;text-overflow:ellipsis;padding-right:8px}
+.hero-btn{margin-top:14px;background:#fff;color:#4f6bff;padding:11px 18px;border-radius:12px}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}.card .in{padding:10px}.price{font-size:16px}}
+.tabs{align-items:flex-end}.tabs button{padding:6px 2px 8px;font-size:11px;white-space:nowrap;min-width:0}
+.tabs .post{color:var(--pr);font-weight:700}.tabs .post span{background:var(--pr);color:#fff;border-radius:50%;width:46px;height:46px;line-height:44px;margin:-22px auto 2px;font-size:28px;box-shadow:0 4px 12px rgba(79,107,255,.4)}
+.tabs{padding-bottom:calc(50px + env(safe-area-inset-bottom,0px))}
+body{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.tabsx{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;scrollbar-width:none}.tabsx button{flex:0 0 auto;background:var(--pr2);color:var(--pr);border-radius:20px}.tabsx button.on{background:var(--pr);color:#fff}
+.shipbtn{width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs{background:#17a673;color:#fff;font-weight:700;text-align:center;border-radius:12px;padding:9px;margin:4px 0 12px}
+.snap{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.snap>div{flex:0 0 100%;scroll-snap-align:start;color:#fff;border-radius:16px;padding:22px 18px;cursor:pointer}
+.mh{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mh>div{cursor:pointer}.sq{aspect-ratio:1;border-radius:12px;font-size:28px}
+.qcart{position:absolute;right:8px;bottom:8px;padding:6px 10px;border-radius:50%;background:var(--pr);font-size:15px}
+.pm{display:inline-block;border:1px solid var(--bd);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;margin:3px 3px 0 0}.pm.off{opacity:.4}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stats .panel{margin:0;cursor:pointer}
+.snap .card{flex:0 0 110px;scroll-snap-align:start;color:var(--tx)}
+main{padding-bottom:130px}
+</style></head><body>
+<header><div class="logo" onclick="go('')">🛍️ Sokoni</div><div id="nav" class="row"></div></header>
+<nav class="tabs" id="tabs"></nav><main id="app"><div class="empty">Loading…</div></main>
+<script>
+// ====== PASTE YOUR SUPABASE VALUES HERE (Project Settings > API) ======
+const SUPABASE_URL="https://cfksezuyfgcjbxrhahvz.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_0QJCOZiaLOFaQYNBtC4pbw_VtEmaF0V";
+// =======================================================================
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const CITIES=["Kampala","Entebbe","Jinja","Bugiri","Mbarara","Gulu","Mbale","Masaka","Fort Portal"];const CONDS=["New","Like new","Good","Fair"];
+const CATS=["Electronics","Furniture","Clothing","Books","Home & Garden","Sports","Toys","Vehicles","Beauty","Other"];
+const S={user:null,listings:[],favs:new Set(),saved:false,city:"",q:"",cat:"",ready:false,err:""};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+var usd=n=>new Intl.NumberFormat("en-UG",{style:"currency",currency:"UGX",maximumFractionDigits:0}).format(n);
+const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
+const imgStyle=u=>safeUrl(u)?`style="background-image:url('${esc(encodeURI(safeUrl(u)))}')"`:"";
+const go=h=>{location.hash=h};
+const uname=()=>S.user?.user_metadata?.name||S.user?.email?.split("@")[0]||"User";
+
+async function loadListings(){
+  const {data,error}=await sb.from("listings").select("*").order("created_at",{ascending:false});
+  if(error){S.err="Couldn’t load listings. Check your Supabase URL/key and that schema.sql was run."}else{S.listings=data;S.err=""}
+  S.ready=true;render();
+}
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();S.user=session?.user||null;
+  sb.auth.onAuthStateChange((_e,s)=>{S.user=s?.user||null;loadFavs()});
+  await loadFavs();loadListings();
+}
+function nav(){tabs();
+  $("#nav").innerHTML=S.user
+   ?`<button onclick="openForm()">＋ Post Item</button><button class="sec" onclick="go('saved')">♥ Saved</button><button class="sec" onclick="go('dashboard')">My Listings</button><button class="sec" onclick="sb.auth.signOut();go('')">Log out</button>`
+   :`<button class="sec" onclick="openAuth(false)">Log in</button><button onclick="openAuth(true)">Sign up</button>`;
+}
+function render(){
+  nav();const h=location.hash.slice(1);
+  if(!S.ready)return;
+  if(S.err){$("#app").innerHTML=`<div class="empty">${esc(S.err)}</div>`;return}
+  if(h==="categories")return cats();
+  if(h==="cart")return cartPage();
+  if(h==="settings")return settings();
+  if(h.startsWith("item-"))return detail(h.slice(5));
+  if(h==="dashboard")return dash();
+  S.saved=h==="saved";home();
+}
+function home(){
+  $("#app").innerHTML=`${S.saved?"<h2>♥ Saved items</h2>":"<div class=\"hero\"><h1>Great finds, right next door.</h1><p>Buy and sell pre-loved things with people in your city, all across Uganda.</p><button class=\"hero-btn\" onclick=\"openForm()\">＋ Sell an Item</button></div>"}<div class="bar"><input placeholder="Search items…" value="${esc(S.q)}" oninput="S.q=this.value;grid()"><select onchange="S.city=this.value;grid()"><option value="">All cities</option>${CITIES.map(c=>`<option ${S.city===c?"selected":""}>${c}</option>`).join("")}</select><select onchange="S.cat=this.value;grid()"><option value="">All categories</option>${CATS.map(c=>`<option ${S.cat===c?"selected":""}>${c}</option>`).join("")}</select></div><div id="g"></div>`;grid();
+}
+function grid(){
+  const q=S.q.toLowerCase();
+  const items=S.listings.filter(l=>(!S.saved||S.favs.has(l.id))&&(!S.city||String(l.city||"").toLowerCase()===S.city.toLowerCase())&&(!S.cat||l.category===S.cat)&&(!q||(l.title+" "+l.description).toLowerCase().includes(q)));
+  $("#g").innerHTML=items.length?`<div class="grid">${items.map(card).join("")}</div>`:emptyHtml();
+}
+var card=l=>`<div class="card" onclick="go('item-${l.id}')"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${l.sold?'<span class="sold">SOLD</span>':""}<button class="heart" onclick="event.stopPropagation();fav('${l.id}')">${S.favs.has(l.id)?"♥":"♡"}</button></div><div class="in"><span class="tag">${esc(l.category)}</span><div class="t">${esc(l.title)}</div><div class="price">${usd(l.price)}</div><div class="mu">📍 ${esc(l.city||"")} · ${ago(l.created_at)}</div></div></div>`;
+function detail(id){
+  const l=S.listings.find(x=>x.id===id);
+  if(!l){$("#app").innerHTML=`<div class="empty">Item not found.<br><br><button onclick="go('')">Back</button></div>`;return}
+  const mine=S.user?.id===l.seller_id;
+  $("#app").innerHTML=`<button class="sec" onclick="go('')">← Back</button><div class="panel detail" style="margin-top:12px"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}</div><div><span class="tag">${esc(l.category)}</span>${l.condition?` <span class="tag">${esc(l.condition)}</span>`:""}<h2 style="margin-top:8px">${esc(l.title)}</h2><div class="price" style="font-size:28px">${usd(l.price)}</div><p style="white-space:pre-wrap">${esc(l.description)}</p><p class="mu">📍 ${esc(loc(l))}</p><p class="mu">Seller: ${esc(l.seller_name)} · ${new Date(l.created_at).toLocaleDateString("en-US")}</p>${mine?`<button class="sec" onclick="go('dashboard')">Manage in My Listings</button>`:l.sold?`<b>This item has been sold.</b>`:`<button onclick="openMsg('${l.id}')">💬 Message seller</button> <button class="sec" onclick="addCart('${l.id}')">${S.cart.includes(l.id)?"✓ In cart":"🛒 Add to cart"}</button> <button class="sec" onclick="fav('${l.id}')">${S.favs.has(l.id)?"♥ Saved":"♡ Save"}</button>`}</div></div>`;
+}
+async function dash(){
+  if(!S.user){$("#app").innerHTML=`<div class="empty">Log in to see your listings.<br><br><button onclick="openAuth(false)">Log in</button></div>`;return}
+  const mine=S.listings.filter(l=>l.seller_id===S.user.id);
+  const {data:inbox}=await sb.from("messages").select("*").eq("seller_id",S.user.id).order("created_at",{ascending:false});
+  $("#app").innerHTML=`<h2>My Listings</h2>${mine.length?`<div class="grid">${mine.map(l=>`<div class="card" style="cursor:default"><div class="img" ${imgStyle(l.image_url)} onclick="go('item-${l.id}')">${safeUrl(l.image_url)?"":"No image"}</div><div class="in"><span class="tag">${esc(l.category)}</span><div class="t">${esc(l.title)}</div><div class="price">${usd(l.price)}</div><div class="row" style="margin-top:8px"><button class="sec" onclick="openForm('${l.id}')">Edit</button><button class="sec" onclick="toggleSold('${l.id}',${!l.sold})">${l.sold?"Relist":"Mark sold"}</button><button class="dan" onclick="del('${l.id}')">Delete</button></div></div></div>`).join("")}</div>`:`<div class="empty">You haven’t posted anything yet.<br><br><button onclick="openForm()">＋ Post Item</button></div>`}<h2 style="margin-top:28px">Messages</h2><div class="panel">${inbox?.length?inbox.map(m=>`<div class="msg"><b>${esc(m.from_name)}</b> <span class="mu">about “${esc(m.listing_title)}” · ${new Date(m.created_at).toLocaleString("en-US")}</span><div style="white-space:pre-wrap">${esc(m.body)}</div></div>`).join(""):`<span class="mu">No messages yet.</span>`}</div>`;
+}
+function modal(html){const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="panel">${html}</div>`;m.addEventListener("click",e=>{if(e.target===m)m.remove()});document.body.appendChild(m);return m}
+function openAuth(up){
+  const m=modal(`<h2>${up?"Create your account":"Welcome back"}</h2>${up?`<label>Display name</label><input id="nm" maxlength="40">`:""}<label>Email</label><input id="em" type="email" autocomplete="email"><label>Password</label><input id="pw" type="password" minlength="6" autocomplete="${up?"new-password":"current-password"}"><div id="er" class="er"></div><div class="row" style="margin-top:14px"><button id="ok">${up?"Sign up":"Log in"}</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  const v=s=>m.querySelector(s)?.value.trim(),er=t=>m.querySelector("#er").textContent=t;
+  m.querySelector("#ok").onclick=async()=>{
+    const email=v("#em"),password=m.querySelector("#pw").value;
+    if(!email||password.length<6)return er("Enter your email and a password (6+ characters).");
+    if(up&&!v("#nm"))return er("Please choose a display name.");
+    const r=up?await sb.auth.signUp({email,password,options:{data:{name:v("#nm")}}}):await sb.auth.signInWithPassword({email,password});
+    if(r.error)return er(r.error.message);
+    if(up&&!r.data.session)return m.querySelector(".panel").innerHTML=`<h2>Check your email</h2><p>We sent a confirmation link to ${esc(email)}. Click it, then log in.</p><button onclick="this.closest('.modal').remove()">OK</button>`;
+    m.remove();
+  };
+}
+function openForm(id){
+  if(!S.user)return openAuth(false);
+  const l=id?S.listings.find(x=>x.id===id):{};
+  const cities=[...new Set([...CITIES,...(l.city?[l.city]:[])])];
+  const m=modal(`<h2>${id?"Edit item":"Create listing"}</h2><label>Title</label><input id="ft" maxlength="80" value="${esc(l.title||"")}"><label>Price (UGX)</label><input id="fp" type="number" inputmode="numeric" min="0" step="500" value="${l.price??""}"><label>Category</label><select id="fc">${CATS.map(c=>`<option ${l.category===c?"selected":""}>${c}</option>`).join("")}</select><label>City / Location</label><select id="fcity">${cities.map(c=>`<option ${l.city===c?"selected":""}>${c}</option>`).join("")}</select><label>Condition</label><select id="fcond">${CONDS.map(c=>`<option ${l.condition===c?"selected":""}>${c}</option>`).join("")}</select><label>Description</label><textarea id="fd" rows="4" maxlength="1500">${esc(l.description||"")}</textarea><label>Photo ${id?"(leave empty to keep current)":""}</label><input id="fimg" type="file" accept="image/*"><div id="er" class="er"></div><div class="row" style="margin-top:14px"><button id="ok">${id?"Save changes":"Publish"}</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  const v=s=>m.querySelector(s).value.trim(),er=t=>m.querySelector("#er").textContent=t;
+  m.querySelector("#ok").onclick=async e=>{
+    const btn=e.target,price=Math.round(parseFloat(v("#fp"))),file=m.querySelector("#fimg").files[0];
+    if(!v("#ft"))return er("Please add a title.");
+    if(!(price>=0))return er("Enter a valid price in UGX.");
+    btn.disabled=true;btn.textContent="Saving…";er("");
+    try{
+      const row={title:v("#ft"),category:v("#fc"),price,city:v("#fcity"),country:"Uganda",condition:v("#fcond"),description:v("#fd"),image_url:l.image_url||""};
+      if(file)row.image_url=await uploadImg(file);
+      const {error}=id?await sb.from("listings").update(row).eq("id",id):await sb.from("listings").insert({...row,seller_name:uname()});
+      if(error)throw error;
+      m.remove();loadListings();
+    }catch(x){er(x.message||"Couldn’t save. Did you run update2.sql?");btn.disabled=false;btn.textContent=id?"Save changes":"Publish"}
+  };
+}
+async function uploadImg(file){
+  const bmp=await createImageBitmap(file),k=Math.min(1,1000/Math.max(bmp.width,bmp.height));
+  const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.82)),path=`${S.user.id}/${Date.now()}.jpg`;
+  const {error}=await sb.storage.from("listing-images").upload(path,blob,{contentType:"image/jpeg"});
+  if(error)throw error;
+  return sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
+}
+const ago=t=>{const m=Math.floor((Date.now()-new Date(t))/6e4);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";const d=Math.floor(h/24);return d<30?d+"d ago":new Date(t).toLocaleDateString("en-GB")};
+const SAMPLES=[["📱","Samsung Galaxy A14",450000,"Kampala","2h ago","Good","#dfe6ff"],["🛋️","3-seater sofa",600000,"Jinja","5h ago","Like new","#ffe8df"],["🚲","City bicycle",180000,"Bugiri","1d ago","Good","#dff7ea"],["💻","HP laptop 8GB RAM",900000,"Kampala","1d ago","Good","#efe3ff"],["📚","Secondary school books",40000,"Entebbe","3d ago","Fair","#fff5d6"],["👟","Running shoes size 42",70000,"Mbarara","4d ago","New","#dff3ff"]];
+function emptyHtml(){
+  if(S.listings.length)return `<div class="empty">No items match your filters.</div>`;
+  return `<div class="empty">No listings yet — be the first to post!<br><br><button onclick="openForm()">＋ Post Your First Item</button></div><h3 style="margin:8px 0">Preview: how listings will look</h3><div class="grid">${SAMPLES.map(([e,t,p,c,a,cd,bg])=>`<div class="card" style="cursor:default"><div class="img" style="background:${bg};font-size:48px">${e}<span class="sold" style="background:#6b7394">SAMPLE</span></div><div class="in"><span class="tag">${cd}</span><div class="t">${t}</div><div class="price">${usd(p)}</div><div class="mu">📍 ${c} · ${a}</div></div></div>`).join("")}</div>`;
+}
+async function del(id){
+  if(!confirm("Delete this listing?"))return;
+  const {error}=await sb.from("listings").delete().eq("id",id);
+  if(error)alert(error.message);else loadListings();
+}
+function openMsg(id){
+  if(!S.user)return openAuth(false);
+  const l=S.listings.find(x=>x.id===id);
+  const m=modal(`<h2>Message ${esc(l.seller_name)}</h2><p class="mu">About “${esc(l.title)}” · ${usd(l.price)}</p><textarea id="tx" rows="4" maxlength="800" placeholder="Hi! Is this still available?"></textarea><div id="er" class="er"></div><div class="row" style="margin-top:14px"><button id="ok">Send</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  m.querySelector("#ok").onclick=async()=>{
+    const body=m.querySelector("#tx").value.trim();if(!body)return;
+    const {error}=await sb.from("messages").insert({listing_id:id,listing_title:l.title,seller_id:l.seller_id,from_name:uname(),body});
+    if(error)return m.querySelector("#er").textContent=error.message;
+    m.querySelector(".panel").innerHTML=`<h2>Sent ✓</h2><p>${esc(l.seller_name)} will see it in their dashboard.</p><button onclick="this.closest('.modal').remove()">Done</button>`;
+  };
+}
+const loc=l=>[l.city,l.country].filter(Boolean).join(", ")||"Location not set";
+async function loadFavs(){
+  if(!S.user){S.favs=new Set()}else{const {data}=await sb.from("favorites").select("listing_id");S.favs=new Set((data||[]).map(r=>r.listing_id))}
+  render();
+}
+async function fav(id){
+  if(!S.user)return openAuth(false);
+  if(S.favs.has(id)){S.favs.delete(id);await sb.from("favorites").delete().eq("listing_id",id)}
+  else{S.favs.add(id);await sb.from("favorites").insert({listing_id:id})}
+  render();
+}
+async function toggleSold(id,sold){
+  const {error}=await sb.from("listings").update({sold}).eq("id",id);
+  if(error)alert(error.message);else loadListings();
+}
+const ICON={Electronics:"📱",Furniture:"🛋️",Clothing:"👕",Books:"📚","Home & Garden":"🪴",Sports:"⚽",Toys:"🧸",Vehicles:"🚲",Other:"📦",Beauty:"💄"};
+try{S.cart=JSON.parse(localStorage.getItem("sokoni-cart")||"[]")}catch(e){S.cart=[]}
+try{const t=localStorage.getItem("sokoni-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+function saveCart(){try{localStorage.setItem("sokoni-cart",JSON.stringify(S.cart))}catch(e){}render()}
+function addCart(id){if(!S.cart.includes(id))S.cart.push(id);saveCart()}
+function rmCart(id){S.cart=S.cart.filter(x=>x!==id);saveCart()}
+function tabs(){
+  const h=location.hash.slice(1),n=S.cart.length;
+  const T=[["","🏠","Home"],["categories","🗂️","Categories"],["post","+","Post"],["cart","🛒","Cart"+(n?` (${n})`:"")],["settings","⚙️","Settings"]];
+  $("#tabs").innerHTML=T.map(([k,i,t])=>{
+    const on=k===h||(k===""&&!["categories","cart","settings"].includes(h));
+    const act=k==="post"?"openForm()":(k===""?"S.cat='';S.q='';":"")+`go('${k}');render()`;
+    return `<button class="${k==="post"?"post":on?"on":""}" onclick="${act}"><span>${i}</span>${t}</button>`}).join("");
+}
+function pickCat(i){S.cat=i<0?"":CATS[i];S.q="";go("")}
+function cats(){
+  const cnt=c=>S.listings.filter(l=>l.category===c&&!l.sold).length;
+  $("#app").innerHTML=`<h2>Categories</h2><div class="grid"><div class="card" style="padding:18px;text-align:center" onclick="pickCat(-1)"><div style="font-size:30px">✨</div><div class="t">All items</div><div class="mu">${S.listings.filter(l=>!l.sold).length} items</div></div>${CATS.map((c,i)=>`<div class="card" style="padding:18px;text-align:center" onclick="pickCat(${i})"><div style="font-size:30px">${ICON[c]}</div><div class="t">${c}</div><div class="mu">${cnt(c)} items</div></div>`).join("")}</div>`;
+}
+function cartPage(){
+  const items=S.cart.map(id=>S.listings.find(l=>l.id===id)).filter(Boolean),live=items.filter(l=>!l.sold);
+  const total=live.reduce((a,l)=>a+Number(l.price),0);
+  $("#app").innerHTML=`<h2>🛒 Your cart</h2>${items.length?items.map(l=>`<div class="panel row" style="margin-bottom:10px"><div class="img" style="width:72px;height:72px;aspect-ratio:auto;border-radius:10px;cursor:pointer" ${imgStyle(l.image_url)} onclick="go('item-${l.id}')"></div><div style="flex:1;min-width:140px"><div class="t">${esc(l.title)}</div><div class="price">${usd(l.price)}</div><div class="mu">📍 ${esc(loc(l))} · ${esc(l.seller_name)}</div>${l.sold?'<span class="er">Sold</span>':""}</div>${l.sold?"":`<button class="sec" onclick="openMsg('${l.id}')">Message</button>`}<button class="dan" onclick="rmCart('${l.id}')">Remove</button></div>`).join("")+`<div class="panel"><div class="row" style="justify-content:space-between"><b>Total (UGX)</b><span class="price">${usd(total)}</span></div><p class="mu">Sokoni doesn’t take payments. Message each seller to agree the price, meetup place and how to pay.</p><button class="sec" onclick="S.cart=[];saveCart()">Clear cart</button></div>`:`<div class="empty">Your cart is empty.<br><br><button onclick="go('')">Browse items</button></div>`}`;
+}
+function settings(){
+  const th=document.documentElement.dataset.theme||"auto";
+  $("#app").innerHTML=`<h2>⚙️ Settings</h2><div class="panel"><b>Account</b>${S.user?`<p class="mu">${esc(S.user.email)}</p><label>Display name</label><input id="sn" maxlength="40" value="${esc(uname())}"><div id="sm" class="mu"></div><div class="row" style="margin-top:12px"><button onclick="saveName()">Save name</button><button class="sec" onclick="sb.auth.signOut();go('')">Log out</button></div>`:`<p class="mu">You’re not logged in.</p><button onclick="openAuth(false)">Log in</button> <button class="sec" onclick="openAuth(true)">Sign up</button>`}</div><div class="panel"><b>Appearance</b><label>Theme</label><select onchange="setTheme(this.value)">${["auto","light","dark"].map(t=>`<option value="${t}" ${th===t?"selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select></div><div class="panel"><b>Shortcuts</b><div class="row" style="margin-top:10px"><button class="sec" onclick="go('orders')">📦 My Orders</button><button class="sec" onclick="go('dashboard')">🏷️ My Listings</button><button class="sec" onclick="go('saved')">♥ Saved</button><button class="sec" onclick="go('support')">🎧 Help</button></div><p class="mu">Currency: US dollars (USD).</p></div>`;
+}
+function setTheme(t){try{if(t==="auto"){document.documentElement.removeAttribute("data-theme");localStorage.removeItem("sokoni-theme")}else{document.documentElement.dataset.theme=t;localStorage.setItem("sokoni-theme",t)}}catch(e){}}
+async function saveName(){
+  const name=$("#sn").value.trim();if(!name)return;
+  const {error}=await sb.auth.updateUser({data:{name}});
+  if(!error)await sb.from("listings").update({seller_name:name}).eq("seller_id",S.user.id);
+  $("#sm").textContent=error?error.message:"Saved ✓";if(!error)loadListings();
+}
+/* ===== Sokoni v2: worldwide USD, orders, cart in DB, chat, support ===== */
+usd=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
+const SHIP="Afghanistan,Albania,Algeria,Andorra,Angola,Antigua and Barbuda,Argentina,Armenia,Australia,Austria,Azerbaijan,Bahamas,Bahrain,Bangladesh,Barbados,Belarus,Belgium,Belize,Benin,Bhutan,Bolivia,Bosnia and Herzegovina,Botswana,Brazil,Brunei,Bulgaria,Burkina Faso,Burundi,Cabo Verde,Cambodia,Cameroon,Canada,Central African Republic,Chad,Chile,China,Colombia,Comoros,Costa Rica,Croatia,Cuba,Cyprus,Czechia,DR Congo,Denmark,Djibouti,Dominica,Dominican Republic,Ecuador,Egypt,El Salvador,Equatorial Guinea,Eritrea,Estonia,Eswatini,Ethiopia,Fiji,Finland,France,Gabon,Gambia,Georgia,Germany,Ghana,Greece,Grenada,Guatemala,Guinea,Guinea-Bissau,Guyana,Haiti,Honduras,Hungary,Iceland,India,Indonesia,Iran,Iraq,Ireland,Israel,Italy,Ivory Coast,Jamaica,Japan,Jordan,Kazakhstan,Kenya,Kiribati,Kosovo,Kuwait,Kyrgyzstan,Laos,Latvia,Lebanon,Lesotho,Liberia,Libya,Liechtenstein,Lithuania,Luxembourg,Madagascar,Malawi,Malaysia,Maldives,Mali,Malta,Marshall Islands,Mauritania,Mauritius,Mexico,Micronesia,Moldova,Monaco,Mongolia,Montenegro,Morocco,Mozambique,Myanmar,Namibia,Nauru,Nepal,Netherlands,New Zealand,Nicaragua,Niger,Nigeria,North Korea,North Macedonia,Norway,Oman,Pakistan,Palau,Palestine,Panama,Papua New Guinea,Paraguay,Peru,Philippines,Poland,Portugal,Qatar,Republic of the Congo,Romania,Russia,Rwanda,Saint Kitts and Nevis,Saint Lucia,Saint Vincent and the Grenadines,Samoa,San Marino,Sao Tome and Principe,Saudi Arabia,Senegal,Serbia,Seychelles,Sierra Leone,Singapore,Slovakia,Slovenia,Solomon Islands,Somalia,South Africa,South Korea,South Sudan,Spain,Sri Lanka,Sudan,Suriname,Sweden,Switzerland,Syria,Taiwan,Tajikistan,Tanzania,Thailand,Timor-Leste,Togo,Tonga,Trinidad and Tobago,Tunisia,Turkey,Turkmenistan,Tuvalu,Uganda,Ukraine,United Arab Emirates,United Kingdom,United States,Uruguay,Uzbekistan,Vanuatu,Vatican City,Venezuela,Vietnam,Yemen,Zambia,Zimbabwe".split(",").sort((a,b)=>a.localeCompare(b)),FEE=0.05;
+Object.assign(S,{ship:"",cartRows:[],promo:null,msgs:[]});
+const unit=(l,q)=>l.bulk_min&&l.bulk_price&&q>=l.bulk_min?Number(l.bulk_price):Number(l.price);
+const off=l=>l.original_price&&Number(l.original_price)>Number(l.price)?Math.round((1-l.price/l.original_price)*100):0;
+const stars=l=>l.rating_count>0?`<span style="color:#f5a623">${"★".repeat(Math.round(l.rating_avg))}${"☆".repeat(5-Math.round(l.rating_avg))}</span> <span class="mu">(${l.rating_count})</span>`:`<span class="mu">☆ No reviews yet</span>`;
+const login=()=>$("#app").innerHTML=`<div class="empty">Please log in first.<br><br><button onclick="openAuth(false)">Log in</button></div>`;
+card=l=>`<div class="card" onclick="go('item-${l.id}')"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${l.sold?'<span class="sold">SOLD</span>':off(l)?`<span class="sold">-${off(l)}% OFF</span>`:""}<button class="heart" onclick="event.stopPropagation();fav('${l.id}')">${S.favs.has(l.id)?"♥":"♡"}</button></div><div class="in"><div class="t">${esc(l.title)}</div><div>${stars(l)}</div><div class="price">${usd(l.price)}${off(l)?` <s class="mu" style="font-weight:400;font-size:13px">${usd(l.original_price)}</s>`:""}</div>${l.bulk_min?`<div class="tag">${l.bulk_min}+ pcs: ${usd(l.bulk_price)}</div>`:""}<div class="mu">${l.sold_count?l.sold_count+" sold · ":""}${l.ships_to==="Worldwide"?"Ships worldwide":"Ships to "+esc(l.ships_to)}</div></div></div>`;
+function nav(){tabs();$("#nav").innerHTML=`<button class="sec" onclick="go('messages')" title="Messages">✉️</button><button class="sec" onclick="go('support')" title="Support">🎧</button>`+(S.user?`<button class="sec" onclick="sb.auth.signOut();go('')">Log out</button>`:`<button class="sec" onclick="openAuth(false)">Log in</button><button onclick="openAuth(true)">Sign up</button>`)}
+function render(){
+  nav();clearInterval(S.poll);const h=location.hash.slice(1);
+  if(!S.ready)return;
+  if(S.err){$("#app").innerHTML=`<div class="empty">${esc(S.err)}</div>`;return}
+  S.saved=h==="saved";
+  const R={categories:cats,cart:cartPage,settings,dashboard:dash,messages:inbox,support:supportPage,checkout,paid,orders:ordersPage};
+  if(R[h])return R[h]();
+  if(h.startsWith("item-"))return detail(h.slice(5));
+  if(h.startsWith("chat-"))return chat(h.slice(5,41),h.slice(42));
+  home();
+}
+function home(){
+  $("#app").innerHTML=`${S.saved?"<h2>♥ Saved items</h2>":`<div class="hero"><h1>Great finds, right next door.</h1><p>Shop deals or sell worldwide.</p><button class="hero-btn" onclick="openForm()">＋ Sell an Item</button></div>`}<div class="bar"><input placeholder="Search items…" value="${esc(S.q)}" oninput="S.q=this.value;grid()"><select onchange="S.ship=this.value;grid()"><option value="">Ship to: Worldwide</option>${SHIP.map(c=>`<option ${S.ship===c?"selected":""}>${c}</option>`).join("")}</select><select onchange="S.cat=this.value;grid()"><option value="">All categories</option>${CATS.map(c=>`<option ${S.cat===c?"selected":""}>${c}</option>`).join("")}</select></div><div id="g"></div>`;grid();
+}
+function grid(){
+  const q=S.q.toLowerCase();
+  const items=S.listings.filter(l=>(!S.saved||S.favs.has(l.id))&&(!S.ship||l.ships_to==="Worldwide"||l.ships_to===S.ship)&&(!S.cat||l.category===S.cat)&&(!q||(l.title+" "+(l.description||"")).toLowerCase().includes(q)));
+  $("#g").innerHTML=items.length?`<div class="grid">${items.map(card).join("")}</div>`:emptyHtml();
+}
+function emptyHtml(){
+  if(S.listings.length)return `<div class="empty">No items match your filters.</div>`;
+  const SM=[["📱","Wireless earbuds",24,48,"Worldwide",120],["👟","Running shoes",39,null,"United States",56],["🎒","Travel backpack",29,45,"Worldwide",310],["⌚","Smart watch",59,84,"Worldwide",88]];
+  return `<div class="empty">No listings yet — be the first to post!<br><br><button onclick="openForm()">＋ Post Your First Item</button></div><h3 style="margin:8px 0">Preview: how listings will look</h3><div class="grid">${SM.map(([e,t,p,o,sh,n])=>`<div class="card" style="cursor:default"><div class="img" style="font-size:48px">${e}${o?`<span class="sold">-${Math.round((1-p/o)*100)}% OFF</span>`:""}</div><div class="in"><div class="t">${t}</div><div class="mu">☆ Sample</div><div class="price">${usd(p)}${o?` <s class="mu" style="font-weight:400;font-size:13px">${usd(o)}</s>`:""}</div><div class="tag">10+ pcs: ${usd(p*0.85)}</div><div class="mu">${n} sold · ${sh==="Worldwide"?"Ships worldwide":"Ships to "+sh}</div></div></div>`).join("")}</div>`;
+}
+const shield=()=>`<div class="panel" style="background:var(--pr2);border-color:var(--pr)"><b>🛡️ Buyer Protection</b><div class="mu">Full refund if the item isn’t as described or doesn’t arrive. Open a dispute from Help &amp; Support.</div></div>`;
+function detail(id){
+  const l=S.listings.find(x=>x.id===id);
+  if(!l){$("#app").innerHTML=`<div class="empty">Item not found.<br><br><button onclick="go('')">Back</button></div>`;return}
+  const mine=S.user?.id===l.seller_id;
+  $("#app").innerHTML=`<button class="sec" onclick="go('')">← Back</button><div class="panel detail" style="margin-top:12px"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${off(l)?`<span class="sold">-${off(l)}% OFF</span>`:""}</div><div><span class="tag">${esc(l.category)}</span>${l.condition?` <span class="tag">${esc(l.condition)}</span>`:""}<h2 style="margin-top:8px">${esc(l.title)}</h2><div>${stars(l)} · ${l.sold_count||0} sold</div><div class="price" style="font-size:28px">${usd(l.price)}${off(l)?` <s class="mu" style="font-size:16px;font-weight:400">${usd(l.original_price)}</s>`:""}</div>${l.bulk_min?`<div class="panel" style="padding:10px;margin:8px 0"><b>Bulk price</b><div>${l.bulk_min}+ pcs: ${usd(l.bulk_price)} each</div></div>`:""}<p class="mu">Shipping: ${Number(l.shipping_fee)?usd(l.shipping_fee):"Free"} · ${l.ships_to==="Worldwide"?"Ships worldwide":"Ships to "+esc(l.ships_to)}<br>📍 ${esc(loc(l))} · Seller: ${esc(l.seller_name)}</p><p style="white-space:pre-wrap">${esc(l.description)}</p>${shield()}${mine?`<button class="sec" onclick="go('dashboard')">Manage in My Listings</button>`:l.sold?`<b>This item has been sold.</b>`:`<div class="row"><button onclick="addCart('${l.id}')">🛒 Add to Cart</button><button style="background:#ff7a59" onclick="buyNow('${l.id}')">Buy Now</button></div><div class="row" style="margin-top:8px"><button class="sec" onclick="chatWith('${l.id}')">💬 Chat with Seller</button><button class="sec" onclick="fav('${l.id}')">${S.favs.has(l.id)?"♥ Saved":"♡ Save"}</button></div>`}</div></div>`;
+}
+async function loadFavs(){
+  if(!S.user){S.favs=new Set();S.cartRows=[];S.cart=[]}else{
+    sb.from("profiles").upsert({id:S.user.id,name:uname()});
+    const [f,c]=await Promise.all([sb.from("favorites").select("listing_id"),sb.from("cart_items").select("listing_id,qty")]);
+    S.favs=new Set((f.data||[]).map(r=>r.listing_id));S.cartRows=c.data||[];S.cart=S.cartRows.map(r=>r.listing_id);
+  }
+  render();
+}
+async function addCart(id,qty=1){
+  if(!S.user)return openAuth(false);
+  const r=S.cartRows.find(x=>x.listing_id===id);
+  await sb.from("cart_items").upsert({user_id:S.user.id,listing_id:id,qty:(r?r.qty:0)+qty});await loadFavs();
+}
+async function setQty(id,q){if(q<1)return rmCart(id);await sb.from("cart_items").update({qty:q}).eq("listing_id",id);loadFavs()}
+async function rmCart(id){await sb.from("cart_items").delete().eq("listing_id",id);loadFavs()}
+async function buyNow(id){if(!S.user)return openAuth(false);await addCart(id);go("checkout")}
+function calc(){
+  const pct=S.promo?.percent||0;
+  const lines=S.cartRows.map(r=>({l:S.listings.find(x=>x.id===r.listing_id),q:r.qty})).filter(x=>x.l&&!x.l.sold);
+  lines.forEach(x=>{x.sub=unit(x.l,x.q)*x.q;x.disc=Math.round(x.sub*pct)/100;x.ship=Number(x.l.shipping_fee)||0;x.total=+(x.sub-x.disc+x.ship).toFixed(2)});
+  const sum=k=>lines.reduce((a,x)=>a+x[k],0);
+  return {lines,sub:sum("sub"),disc:sum("disc"),ship:sum("ship"),total:sum("total")};
+}
+const rw=(a,b)=>`<div class="row" style="justify-content:space-between"><span>${a}</span><span>${b}</span></div>`;
+const sumHtml=c=>rw("Items",usd(c.sub))+(c.disc?rw("Promo","−"+usd(c.disc)):"")+rw("Shipping",c.ship?usd(c.ship):"Free")+`<div class="row" style="justify-content:space-between"><b>Total (USD)</b><b class="price">${usd(c.total)}</b></div>`;
+function cartPage(){
+  if(!S.user)return login();
+  const c=calc();
+  $("#app").innerHTML=`<h2>🛒 Your cart</h2>${c.lines.length?c.lines.map(({l,q})=>`<div class="panel row" style="margin-bottom:10px"><div class="img" style="width:72px;height:72px;aspect-ratio:auto;border-radius:10px" ${imgStyle(l.image_url)}></div><div style="flex:1;min-width:130px"><div class="t">${esc(l.title)}</div><div class="price">${usd(unit(l,q))} each</div>${l.bulk_min&&q<l.bulk_min?`<div class="mu">Buy ${l.bulk_min}+ for ${usd(l.bulk_price)} each</div>`:""}</div><div class="row"><button class="sec" onclick="setQty('${l.id}',${q-1})">−</button><b>${q}</b><button class="sec" onclick="setQty('${l.id}',${q+1})">＋</button></div><button class="dan" onclick="rmCart('${l.id}')">✕</button></div>`).join("")+`<div class="panel"><div class="row"><input id="pc" placeholder="Promo code" style="flex:1" value="${esc(S.promo?.code||"")}"><button class="sec" onclick="applyPromo()">Apply</button></div><div id="pm" class="er"></div>${sumHtml(c)}<button style="width:100%;margin-top:12px" onclick="go('checkout')">Checkout</button></div>`:`<div class="empty">Your cart is empty.<br><br><button onclick="go('')">Browse items</button></div>`}`;
+}
+async function applyPromo(){
+  const code=$("#pc").value.trim().toUpperCase();if(!code){S.promo=null;return render()}
+  const {data}=await sb.from("promos").select("*").eq("code",code).eq("active",true).maybeSingle();
+  if(data){S.promo=data;render()}else{S.promo=null;$("#pm").textContent="Invalid promo code."}
+}
+function checkout(){
+  if(!S.user)return login();
+  const c=calc();if(!c.lines.length)return go("cart");
+  $("#app").innerHTML=`<h2>Checkout</h2>${shield()}<div class="panel"><b>Shipping address</b><textarea id="addr" rows="3" placeholder="Full name, street, city, country"></textarea></div><div class="panel"><b>Order summary</b>${c.lines.map(({l,q})=>rw(esc(l.title)+" × "+q,usd(unit(l,q)*q))).join("")}${sumHtml(c)}<div id="er" class="er"></div><button style="width:100%;margin-top:12px" id="pay" onclick="pay()">Pay ${usd(c.total)} by card</button><button class="sec" style="width:100%;margin-top:8px" disabled>PayPal — coming soon</button><p class="mu">Card payments are processed by Stripe. Sellers pay Sokoni a 10% commission.</p></div>`;
+}
+async function pay(){
+  const er=$("#er"),btn=$("#pay"),addr=$("#addr").value.trim();
+  if(addr.length<10)return er.textContent="Please enter your shipping address.";
+  btn.disabled=true;btn.textContent="Processing…";er.textContent="";
+  const ids=[];
+  for(const {l,q,sub,disc,ship,total} of calc().lines){
+    const comm=+(total*FEE).toFixed(2);
+    const {data,error}=await sb.from("orders").insert({seller_id:l.seller_id,listing_id:l.id,title:l.title,qty:q,item_total:sub,shipping:ship,discount:disc,total,commission:comm,seller_payout:+(total-comm).toFixed(2),ship_address:addr,promo_code:S.promo?.code||null}).select("id").single();
+    if(error){er.textContent=error.message;btn.disabled=false;btn.textContent="Try again";return}
+    ids.push(data.id);
+  }
+  const {data,error}=await sb.functions.invoke("create-checkout",{body:{order_ids:ids}});
+  if(error||!data?.url){er.innerHTML="Card payments aren’t connected yet. Your order was saved as <b>Pending payment</b> in My Orders.";btn.disabled=false;btn.textContent="Try again";return}
+  location.href=data.url;
+}
+const receipt=o=>`<div class="msg"><b>${esc(o.title)}</b> × ${o.qty} <span class="tag">${esc(o.status)}</span><div class="mu">Order #${o.id.slice(0,8)} · ${new Date(o.created_at).toLocaleString("en-US")}</div><div>Items ${usd(o.item_total)} · Shipping ${usd(o.shipping)}${Number(o.discount)>0?` · Promo −${usd(o.discount)}`:""}</div><b>Total ${usd(o.total)}</b></div>`;
+async function paid(){
+  if(!S.user)return login();
+  const {data}=await sb.from("orders").select("*").eq("buyer_id",S.user.id).gte("created_at",new Date(Date.now()-2*3600e3).toISOString()).order("created_at",{ascending:false});
+  const ok=(data||[]).filter(o=>o.status!=="Pending payment");
+  if(ok.length&&S.cartRows.length){await sb.from("cart_items").delete().eq("user_id",S.user.id);S.cartRows=[];S.cart=[];tabs()}
+  $("#app").innerHTML=ok.length?`<div class="panel"><h2>✅ Payment confirmed</h2>${ok.map(receipt).join("")}<button onclick="go('orders')">View my orders</button></div>`:`<div class="panel"><h2>Confirming your payment…</h2><p class="mu">This usually takes a few seconds.</p><button onclick="paid()">Refresh</button></div>`;
+}
+async function ordersPage(){
+  if(!S.user)return login();
+  const {data}=await sb.from("orders").select("*").order("created_at",{ascending:false}),all=data||[];
+  const mine=all.filter(o=>o.buyer_id===S.user.id),sales=all.filter(o=>o.seller_id===S.user.id);
+  const flow=s=>["Pending payment","Paid","Shipped","Delivered"].map(x=>`<span class="tag" style="${x===s?"":"opacity:.35"}">${x}</span>`).join(" → ");
+  $("#app").innerHTML=`<h2>📦 My Orders</h2>${mine.length?mine.map(o=>`<div class="panel">${receipt(o)}<div>${flow(o.status)}</div></div>`).join(""):`<div class="empty">No orders yet.</div>`}<h2 style="margin-top:24px">Sales</h2>${sales.length?sales.map(o=>`<div class="panel"><b>${esc(o.title)}</b> × ${o.qty} — ${usd(o.total)}<div class="mu">You receive ${usd(o.seller_payout)} (after the platform fee: ${usd(o.commission)})</div><div class="mu" style="white-space:pre-wrap">Ship to: ${esc(o.ship_address||"")}</div><div style="margin:8px 0">${flow(o.status)}</div>${o.status==="Paid"?`<button onclick="setStatus('${o.id}','Shipped')">Mark shipped</button>`:o.status==="Shipped"?`<button onclick="setStatus('${o.id}','Delivered')">Mark delivered</button>`:""}</div>`).join(""):`<div class="empty">No sales yet.</div>`}`;
+}
+async function setStatus(id,st){const {error}=await sb.from("orders").update({status:st}).eq("id",id);if(error)alert(error.message);else ordersPage()}
+async function loadMsgs(){const {data}=await sb.from("messages").select("*").order("created_at");S.msgs=data||[]}
+function chatWith(id){
+  if(!S.user)return openAuth(false);
+  const l=S.listings.find(x=>x.id===id);if(l&&l.seller_id!==S.user.id)go("chat-"+id+"-"+S.user.id);
+}
+async function inbox(){
+  if(!S.user)return login();
+  await loadMsgs();const T={};S.msgs.forEach(m=>{T[m.listing_id+"-"+m.buyer_id]=m});
+  const th=Object.values(T).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  $("#app").innerHTML=`<h2>✉️ Messages</h2>${th.length?th.map(m=>`<div class="panel" style="cursor:pointer" onclick="go('chat-${m.listing_id}-${m.buyer_id}')"><b>${esc(m.listing_title)}</b><div class="mu">${esc(m.from_name)}: ${esc(m.body.slice(0,80))}</div></div>`).join(""):`<div class="empty">No conversations yet. Open an item and tap “Chat with Seller”.</div>`}`;
+}
+const bubbles=(ms,mine)=>ms.length?ms.map(m=>`<div style="display:flex;justify-content:${mine(m)?"flex-end":"flex-start"}"><div class="tag" style="max-width:80%;white-space:pre-wrap;padding:8px 12px;border-radius:14px;${mine(m)?"background:var(--pr);color:#fff":""}">${esc(m.body)}</div></div>`).join(""):`<div class="mu">Say hello 👋</div>`;
+async function chat(lid,bid){
+  if(!S.user)return login();
+  const l=S.listings.find(x=>x.id===lid);
+  const draw=async()=>{await loadMsgs();const box=$("#cb");if(!box)return;box.innerHTML=bubbles(S.msgs.filter(m=>m.listing_id===lid&&m.buyer_id===bid),m=>m.from_id===S.user.id);box.scrollTop=box.scrollHeight};
+  $("#app").innerHTML=`<button class="sec" onclick="go('messages')">← Inbox</button><div class="panel" style="margin-top:12px"><b>${esc(l?l.title:"Chat")}</b><div id="cb" style="height:50vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:12px 0"></div><div class="row"><input id="ct" style="flex:1" placeholder="Type a message…" maxlength="800"><button id="cs">Send</button></div></div>`;
+  $("#cs").onclick=async()=>{const body=$("#ct").value.trim();if(!body||!l)return;$("#ct").value="";await sb.from("messages").insert({listing_id:lid,listing_title:l.title,seller_id:l.seller_id,buyer_id:bid,from_id:S.user.id,from_name:uname(),body});draw()};
+  draw();S.poll=setInterval(draw,6000);
+}
+const FAQ=[["📦 Shipping","How long does shipping take?","Each seller sets their shipping fee and where they ship. Use Chat with Seller to ask for tracking details."],["↩️ Refunds","How do I get a refund?","Open a dispute below with your order. If the item didn’t arrive or isn’t as described, we review it and refund the buyer."],["🛡️ Buyer Protection","What does it cover?","Full refund if the item isn’t as described or doesn’t arrive. Report the problem within 14 days of the expected delivery."],["💰 Selling Fees","What does selling cost?","Listing is free. Sokoni keeps a 10% commission on each paid order (item price plus shipping). Payment processor fees may apply."]];
+async function supportPage(){
+  let os=[];if(S.user){const {data}=await sb.from("orders").select("id,title").eq("buyer_id",S.user.id).order("created_at",{ascending:false});os=data||[]}
+  const draw=async()=>{if(!S.user||!$("#sc"))return;const {data}=await sb.from("support_messages").select("*").order("created_at");$("#sc").innerHTML=bubbles(data||[],m=>!m.from_staff);$("#sc").scrollTop=$("#sc").scrollHeight};
+  $("#app").innerHTML=`<h2>🎧 Help &amp; Support</h2><div class="panel">${FAQ.map(([h,q,a])=>`<details style="padding:8px 0;border-top:1px solid var(--bd)"><summary><b>${h}</b> — ${q}</summary><p class="mu">${a}</p></details>`).join("")}</div><div class="panel"><b>Report an issue / open a dispute</b>${S.user?`<label>Order</label><select id="do"><option value="">No specific order</option>${os.map(o=>`<option value="${o.id}">#${o.id.slice(0,8)} · ${esc(o.title)}</option>`).join("")}</select><label>Problem</label><select id="dk"><option>Item not as described</option><option>Item didn’t arrive</option><option>Seller not responding</option><option>Other</option></select><label>Details</label><textarea id="dd" rows="3" maxlength="2000"></textarea><div id="dm" class="mu"></div><button style="margin-top:10px" onclick="sendDispute()">Submit</button>`:`<p class="mu">Log in to report an issue.</p>`}</div><div class="panel"><b>Support chat</b>${S.user?`<div id="sc" style="height:35vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:12px 0"></div><div class="row"><input id="st" style="flex:1" placeholder="Ask a question or request a human agent…" maxlength="1000"><button id="ss">Send</button></div>`:`<p class="mu">Log in to chat with support.</p>`}<p class="mu">Our team replies as soon as possible.</p></div>`;
+  if(S.user){$("#ss").onclick=async()=>{const body=$("#st").value.trim();if(!body)return;$("#st").value="";await sb.from("support_messages").insert({user_id:S.user.id,body});draw()};draw();S.poll=setInterval(draw,8000)}
+}
+async function sendDispute(){
+  const details=$("#dd").value.trim();if(!details)return;
+  const {error}=await sb.from("disputes").insert({order_id:$("#do").value||null,kind:$("#dk").value,details});
+  $("#dm").textContent=error?error.message:"Submitted ✓ We’ll review it and get back to you.";if(!error)$("#dd").value="";
+}
+function openForm(id){
+  if(!S.user)return openAuth(false);
+  const l=id?S.listings.find(x=>x.id===id):{};
+  const opt=(a,v)=>a.map(c=>`<option ${v===c?"selected":""}>${c}</option>`).join("");
+  const m=modal(`<h2>${id?"Edit item":"Create listing"}</h2><label>Title</label><input id="ft" maxlength="80" value="${esc(l.title||"")}"><label>Price (USD)</label><input id="fp" type="number" min="0" step="0.01" value="${l.price??""}"><label>Original price (optional, shows a discount badge)</label><input id="fo" type="number" min="0" step="0.01" value="${l.original_price??""}"><label>Bulk deal (optional): buy this many or more…</label><input id="fbm" type="number" min="2" value="${l.bulk_min??""}"><label>…for this price each (USD)</label><input id="fbp" type="number" min="0" step="0.01" value="${l.bulk_price??""}"><label>Shipping fee (USD, 0 = free)</label><input id="fs" type="number" min="0" step="0.01" value="${l.shipping_fee??0}"><label>Ships to</label><select id="fst"><option>Worldwide</option>${opt(SHIP,l.ships_to)}</select><label>Category</label><select id="fc">${opt(CATS,l.category)}</select><label>Condition</label><select id="fcond">${opt(CONDS,l.condition)}</select><label>Item location (city, country)</label><input id="fcity" maxlength="80" value="${esc(l.city||"")}"><label>Description</label><textarea id="fd" rows="4" maxlength="1500">${esc(l.description||"")}</textarea><label>Photo ${id?"(leave empty to keep current)":""}</label><input id="fimg" type="file" accept="image/*"><div id="er" class="er"></div><div class="row" style="margin-top:14px"><button id="ok">${id?"Save changes":"Publish"}</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  const v=s=>m.querySelector(s).value.trim(),er=t=>m.querySelector("#er").textContent=t,num=s=>v(s)===""?null:parseFloat(v(s));
+  m.querySelector("#ok").onclick=async e=>{
+    const btn=e.target,price=num("#fp"),orig=num("#fo"),bm=num("#fbm"),bp=num("#fbp"),ship=num("#fs")||0,file=m.querySelector("#fimg").files[0];
+    if(!v("#ft"))return er("Please add a title.");
+    if(!(price>=0))return er("Enter a valid price in USD.");
+    if(orig!==null&&orig<=price)return er("Original price must be higher than the price.");
+    if((bm===null)!==(bp===null)||(bp!==null&&bp>=price))return er("Bulk deal needs a quantity and a price lower than the normal price.");
+    btn.disabled=true;btn.textContent="Saving…";er("");
+    try{
+      const row={title:v("#ft"),category:v("#fc"),price,original_price:orig,bulk_min:bm,bulk_price:bp,shipping_fee:ship,ships_to:v("#fst"),city:v("#fcity"),country:"",condition:v("#fcond"),description:v("#fd"),image_url:l.image_url||""};
+      if(file)row.image_url=await uploadImg(file);
+      const {error}=id?await sb.from("listings").update(row).eq("id",id):await sb.from("listings").insert({...row,seller_name:uname()});
+      if(error)throw error;
+      m.remove();loadListings();
+    }catch(x){er(x.message||"Couldn’t save. Did you run update3.sql?");btn.disabled=false;btn.textContent=id?"Save changes":"Publish"}
+  };
+}
+/* ===== Sokoni v3: home upgrade, ship-to picker, profile dashboard, checkout ===== */
+const TABS=[["Explore",null],["Sale","sale"],["Electronics",["Electronics"]],["Fashion",["Clothing","Fashion"]],["Home",["Furniture","Home & Garden"]],["Beauty",["Beauty"]]];
+Object.assign(S,{tab:0,star:new Set()});
+const tabOk=l=>{const t=TABS[S.tab][1];return !t||(t==="sale"?off(l)>0:t.includes(l.category))};
+const soldTxt=n=>n>=1000?(Math.floor(n/100)/10)+"K+ sold":n+" sold";
+function toast(t){const d=document.createElement("div");d.textContent=t;d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:150px;background:#1b2140;color:#fff;padding:10px 16px;border-radius:20px;z-index:30;font-size:14px";document.body.appendChild(d);setTimeout(()=>d.remove(),1600)}
+var _add=addCart;addCart=async function(id,q){await _add(id,q);if(S.user)toast("Added to cart ✓")};
+var _det=detail;detail=function(id){try{const h=JSON.parse(localStorage.getItem("sokoni-hist")||"[]").filter(x=>x!==id);h.unshift(id);localStorage.setItem("sokoni-hist",JSON.stringify(h.slice(0,20)))}catch(e){}return _det(id)};
+card=l=>{const n=l.sold_count||0,q=!l.sold&&l.seller_id!==S.user?.id;return `<div class="card" onclick="go('item-${l.id}')"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${l.sold?'<span class="sold">SOLD</span>':off(l)?`<span class="sold">-${off(l)}% OFF</span>`:""}<button class="heart" onclick="event.stopPropagation();fav('${l.id}')">${S.favs.has(l.id)?"♥":"♡"}</button>${q?`<button class="qcart" onclick="event.stopPropagation();addCart('${l.id}')" title="Add to cart">🛒</button>`:""}</div><div class="in"><div class="t">${esc(l.title)}</div><div>${stars(l)}</div><div class="price">${usd(l.price)}${off(l)?` <s class="mu" style="font-weight:400;font-size:13px">${usd(l.original_price)}</s>`:""}</div>${l.bulk_min?`<div class="tag">${l.bulk_min}+ pcs: ${usd(l.bulk_price)}</div>`:""}${S.star.has(l.seller_id)?` <span class="tag" style="background:#fff3d6;color:#b7791f">⭐ Star Seller</span>`:""}<div class="mu">${n?soldTxt(n)+" · ":""}${l.ships_to==="Worldwide"?"Ships worldwide":"Ships to "+esc(l.ships_to)}</div></div></div>`};
+function home(){
+  $("#app").innerHTML=`${S.saved?"<h2>♥ Saved items</h2>":`<div class="hero"><h1>Great finds, right next door.</h1><p>Shop deals or sell worldwide.</p><button class="hero-btn" onclick="openForm()">＋ Sell an Item</button></div>`}<div class="bar" style="margin-bottom:8px"><input placeholder="Search items…" value="${esc(S.q)}" oninput="S.q=this.value;grid()"></div>${S.saved?"":`<div class="tabsx">${TABS.map(([n],i)=>`<button class="${S.tab===i?"on":""}" onclick="S.tab=${i};home()">${n}</button>`).join("")}</div>`}<div class="bar"><button class="sec shipbtn" onclick="openShip()">🌍 ${esc(S.ship||"Worldwide")} ▾</button><select onchange="S.cat=this.value;grid()"><option value="">All categories</option>${CATS.map(c=>`<option ${S.cat===c?"selected":""}>${c}</option>`).join("")}</select></div><div id="x"></div><div id="g"></div>`;grid();
+}
+function grid(){
+  const t={};S.listings.forEach(l=>t[l.seller_id]=(t[l.seller_id]||0)+(l.sold_count||0));S.star=new Set(Object.keys(t).filter(k=>t[k]>=50));
+  const q=S.q.toLowerCase();
+  const items=S.listings.filter(l=>(!S.saved||S.favs.has(l.id))&&tabOk(l)&&(!S.ship||l.ships_to==="Worldwide"||l.ships_to===S.ship)&&(!S.cat||l.category===S.cat)&&(!q||(l.title+" "+(l.description||"")).toLowerCase().includes(q)));
+  const plain=!S.saved&&!S.tab&&!q&&!S.cat&&!S.ship&&S.listings.length,mh=[...S.listings].filter(l=>!l.sold).sort((a,b)=>(b.sold_count||0)-(a.sold_count||0)).slice(0,6);
+  $("#x").innerHTML=plain?`<div class="fs">🚚 Free shipping on orders over $15</div><div class="snap"><div style="background:linear-gradient(135deg,#ff7a59,#ff4d6d)" onclick="S.tab=1;home()"><h2 style="margin:0">Up to 70% OFF Deals</h2><p style="margin:4px 0 0">Tap to shop the sale →</p></div><div style="background:linear-gradient(135deg,#4f6bff,#7b5cff)"><h2 style="margin:0">Buy more, save more</h2><p style="margin:4px 0 0">Look for bulk prices like 10+ pcs.</p></div><div style="background:linear-gradient(135deg,#17a673,#2dc98e)" onclick="openForm()"><h2 style="margin:0">Sell worldwide</h2><p style="margin:4px 0 0">Post your first item free →</p></div></div><h3 style="margin:16px 0 8px">Must-haves</h3><div class="mh">${mh.map(l=>`<div onclick="go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"📦"}</div><div class="price" style="font-size:14px">${usd(l.price)}</div></div>`).join("")}</div><h3 style="margin:16px 0 8px">All items</h3>`:"";
+  $("#g").innerHTML=items.length?`<div class="grid">${items.map(card).join("")}</div>`:emptyHtml();
+}
+function openShip(){
+  const m=modal(`<h2>Ship to</h2><input id="cs" placeholder="Search countries…"><div id="cl" style="max-height:55vh;overflow:auto;margin-top:10px"></div>`);
+  const draw=q=>{q=q.toLowerCase();window._L=["Worldwide",...SHIP].filter(c=>!q||c.toLowerCase().includes(q));m.querySelector("#cl").innerHTML=window._L.map((c,i)=>`<div class="msg" style="cursor:pointer;${(S.ship||"Worldwide")===c?"font-weight:700;color:var(--pr)":""}" onclick="pickShip(${i})">${esc(c)}</div>`).join("")||`<div class="mu">No match</div>`};
+  m.querySelector("#cs").oninput=e=>draw(e.target.value);draw("");
+}
+function pickShip(i){const c=window._L[i];S.ship=c==="Worldwide"?"":c;document.querySelector(".modal")?.remove();home()}
+function calc(){
+  const pct=S.promo?.percent||0;
+  const lines=S.cartRows.map(r=>({l:S.listings.find(x=>x.id===r.listing_id),q:r.qty})).filter(x=>x.l&&!x.l.sold);
+  lines.forEach(x=>{x.sub=unit(x.l,x.q)*x.q;x.disc=Math.round(x.sub*pct)/100;x.ship=x.sub-x.disc>15?0:Number(x.l.shipping_fee)||0;x.total=+(x.sub-x.disc+x.ship).toFixed(2)});
+  const sum=k=>lines.reduce((a,x)=>a+x[k],0);
+  return {lines,sub:sum("sub"),disc:sum("disc"),ship:sum("ship"),total:sum("total")};
+}
+const getAddrs=async()=>{try{const {data}=await sb.from("profiles").select("addresses").eq("id",S.user.id).maybeSingle();return data?.addresses||[]}catch(e){return[]}};
+const saveAddrs=a=>sb.from("profiles").upsert({id:S.user.id,name:uname(),addresses:a});
+function addAddr(){const m=modal(`<h2>Add address</h2><textarea id="aa" rows="3" placeholder="Full name, street, city, country"></textarea><div class="row" style="margin-top:12px"><button id="ok">Save</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);m.querySelector("#ok").onclick=async()=>{const t=m.querySelector("#aa").value.trim();if(t.length<10)return;const a=await getAddrs();a.push(t);await saveAddrs(a);m.remove();settings()}}
+async function delAddr(i){const a=await getAddrs();a.splice(i,1);await saveAddrs(a);settings()}
+async function checkout(){
+  if(!S.user)return login();
+  const c=calc();if(!c.lines.length)return go("cart");
+  const ad=await getAddrs();
+  $("#app").innerHTML=`<h2>Checkout</h2><div class="panel" style="background:var(--pr2);border-color:var(--pr)"><div style="font-size:30px;float:left;margin-right:10px">🛡️</div><b>Pay confidently</b><div class="mu">Protect your orders with Sokoni Buyer Protection: full refund if the item isn’t as described or doesn’t arrive.</div></div><div class="panel"><b>Shipping address</b>${ad.length?`<select onchange="$('#addr').value=this.value" style="margin:8px 0"><option value="">Use a saved address…</option>${ad.map(a=>`<option>${esc(a)}</option>`).join("")}</select>`:""}<textarea id="addr" rows="3" placeholder="Full name, street, city, country"></textarea></div><div class="panel"><b>Order summary</b>${c.lines.map(({l,q})=>rw(esc(l.title)+" × "+q,usd(unit(l,q)*q))).join("")}${sumHtml(c)}<div id="er" class="er"></div><button style="width:100%;margin-top:12px" id="pay" onclick="pay()">Pay ${usd(c.total)} by card</button><div style="margin-top:10px"><span class="pm">VISA</span><span class="pm">Mastercard</span><span class="pm">Apple Pay</span><span class="pm">Google Pay</span><span class="pm off">PayPal · soon</span><span class="pm off">Wire Transfer · soon</span></div><p class="mu">Card payments are processed securely by Stripe. Sellers pay Sokoni a 10% commission.</p></div>`;
+}
+async function settings(){
+  const th=document.documentElement.dataset.theme||"auto";
+  const look=`<div class="panel"><b>Appearance</b><label>Theme</label><select onchange="setTheme(this.value)">${["auto","light","dark"].map(t=>`<option value="${t}" ${th===t?"selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select></div>`;
+  if(!S.user){$("#app").innerHTML=`<h2>⚙️ Settings</h2><div class="panel"><p class="mu">You’re not logged in.</p><button onclick="openAuth(false)">Log in</button> <button class="sec" onclick="openAuth(true)">Sign up</button></div>`+look;return}
+  let ad=[],cp=[],no=0;
+  try{const [a,c,o]=await Promise.all([getAddrs(),sb.from("promos").select("code,percent").eq("active",true),sb.from("orders").select("id",{count:"exact",head:true}).eq("buyer_id",S.user.id)]);ad=a;cp=c.data||[];no=o.count||0}catch(e){}
+  let hist=[];try{hist=JSON.parse(localStorage.getItem("sokoni-hist")||"[]").map(id=>S.listings.find(l=>l.id===id)).filter(Boolean).slice(0,10)}catch(e){}
+  const nl=S.listings.filter(l=>l.seller_id===S.user.id).length;
+  $("#app").innerHTML=`<h2>👤 My Account</h2><div class="panel row"><div style="width:52px;height:52px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc(uname()[0].toUpperCase())}</div><div><b>${esc(uname())}</b><div class="mu">${esc(S.user.email)}</div></div></div><div class="stats"><div class="panel"><div class="mu">Credit Balance</div><div class="price">$0.00</div></div><div class="panel" onclick="document.getElementById('cpn').scrollIntoView()"><div class="mu">Coupons &amp; Offers</div><div class="price">${cp.length}</div></div><div class="panel" onclick="go('orders')"><div class="mu">Your Orders</div><div class="price">${no}</div></div><div class="panel" onclick="go('dashboard')"><div class="mu">My Listings</div><div class="price">${nl}</div></div></div><div class="panel"><div class="row" style="justify-content:space-between"><b>📦 Your Orders</b><button class="sec" onclick="go('orders')">View</button></div></div><div class="panel"><div class="row" style="justify-content:space-between"><b>🏷️ My Listings</b><button class="sec" onclick="go('dashboard')">Manage</button></div></div><div class="panel" id="cpn"><b>🎟️ Coupons &amp; Offers</b>${cp.length?cp.map(c=>`<div class="msg"><b>${esc(c.code)}</b> — ${c.percent}% off. Enter it in your cart.</div>`).join(""):`<p class="mu">No coupons right now.</p>`}</div><div class="panel"><div class="row" style="justify-content:space-between"><b>📍 Saved Addresses</b><button class="sec" onclick="addAddr()">＋ Add</button></div>${ad.map((a,i)=>`<div class="msg row" style="justify-content:space-between"><span style="white-space:pre-wrap">${esc(a)}</span><button class="dan" onclick="delAddr(${i})">✕</button></div>`).join("")||`<p class="mu">No saved addresses.</p>`}</div><div class="panel"><b>🕘 Browsing History</b>${hist.length?`<div class="snap" style="margin-top:10px">${hist.map(l=>`<div class="card" style="flex:0 0 110px;padding:0" onclick="go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}></div><div class="price" style="font-size:13px;padding:4px 6px">${usd(l.price)}</div></div>`).join("")}</div>`:`<p class="mu">Items you view will show up here.</p>`}</div><div class="panel"><b>⭐ Reviews</b><p class="mu">Reviews are coming soon. You’ll be able to rate items once an order is delivered.</p></div><div class="panel"><b>Account</b><label>Display name</label><input id="sn" maxlength="40" value="${esc(uname())}"><div id="sm" class="mu"></div><div class="row" style="margin-top:12px"><button onclick="saveName()">Save name</button><button class="sec" onclick="go('support')">🎧 Help</button><button class="sec" onclick="sb.auth.signOut();go('')">Log out</button></div></div>`+look;
+}
+
+/* ===== Sokoni v4: books, flash deals, plans, wallet, rewards, admin ===== */
+// Paste your Lemon Squeezy / Gumroad / Flutterwave payment links between the quotes:
+const CFG={PAY_LINKS:{pro:"",boost:"",gift10:"",gift25:"",gift50:"",gift100:""}},COMM=0.10,FORMATS=["Paperback","Hardcover","Digital E-Book (PDF)","Digital E-Book (EPUB)"];
+Object.assign(S,{flags:{},owned:new Set(),isAdmin:false,freeBoosts:0,sort:"best",credit:0,tick:null});
+const isDig=l=>String(l.format||"").startsWith("Digital"),isBoost=l=>l.boosted_until&&new Date(l.boosted_until)>new Date(),isPrio=l=>isBoost(l)||l.featured||l.official||(S.flags[l.seller_id]||{}).pro;
+const ph=(k,c)=>{const g={book:'<rect x="70" y="40" width="100" height="130" rx="6" fill="#fff"/><rect x="70" y="40" width="14" height="130" fill="#0003"/><rect x="95" y="70" width="60" height="8" fill="#0003"/><rect x="95" y="90" width="45" height="8" fill="#0003"/>',phone:'<rect x="80" y="30" width="80" height="150" rx="14" fill="#fff"/><circle cx="120" cy="160" r="7" fill="#0003"/>',bag:'<path d="M70 80h100l10 100H60z" fill="#fff"/><path d="M95 80c0-30 50-30 50 0" fill="none" stroke="#fff" stroke-width="8"/>',shoe:'<path d="M50 140c40 0 40-50 70-50 20 0 20 30 70 40 10 2 10 30-10 30H50z" fill="#fff"/>'}[k];return `url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 210"><rect width="240" height="210" fill="${c}"/>${g}</svg>`)}')`};
+var _ll=loadListings;loadListings=async function(){try{const {data}=await sb.from("seller_flags").select("*");S.flags=Object.fromEntries((data||[]).map(f=>[f.id,{...f,pro:f.pro&&(!f.pro_until||new Date(f.pro_until)>new Date())}]))}catch(e){}return _ll()};
+async function loadFavs(){
+  if(!S.user){S.favs=new Set();S.cartRows=[];S.cart=[];S.owned=new Set();S.isAdmin=false;S.credit=0;S.freeBoosts=0}else{
+    sb.from("profiles").upsert({id:S.user.id,name:uname()});
+    const [f,c,o,p,w]=await Promise.all([sb.from("favorites").select("listing_id"),sb.from("cart_items").select("listing_id,qty"),sb.from("orders").select("listing_id,status").eq("buyer_id",S.user.id),sb.from("profiles").select("is_admin").eq("id",S.user.id).maybeSingle(),sb.from("wallet_tx").select("amount")]);
+    S.favs=new Set((f.data||[]).map(r=>r.listing_id));S.cartRows=c.data||[];S.cart=S.cartRows.map(r=>r.listing_id);
+    S.owned=new Set((o.data||[]).filter(x=>x.status!=="Pending payment").map(x=>x.listing_id));
+    S.isAdmin=!!p.data?.is_admin;S.freeBoosts=S.freeBoosts||0;sb.from("profiles").select("free_boosts").eq("id",S.user.id).maybeSingle().then(r=>{S.freeBoosts=(r.data&&r.data.free_boosts)||0},()=>{});S.credit=(w.data||[]).reduce((a,r)=>a+Number(r.amount),0);
+  }
+  render();
+}
+const badges=(l)=>{const f=S.flags[l.seller_id]||{};return (f.verified?`<span class="tag" style="background:#dff7ea;color:#17a673">✔ Verified Seller</span> `:"")+(f.pro?`<span class="tag">⭐ Pro Seller</span> `:"")+(l.official?`<span class="tag" style="background:#e8e0ff;color:#6b3fd6">🏬 Official Sokoni Store</span> `:"")};
+card=l=>{const n=l.sold_count||0,q=!l.sold&&l.seller_id!==S.user?.id,dg=isDig(l);return `<div class="card" onclick="go('item-${l.id}')"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${l.sold?'<span class="sold">SOLD</span>':(isBoost(l)||l.featured)?'<span class="sold" style="background:#ff7a59">🔥 First Seen</span>':off(l)?`<span class="sold">-${off(l)}% OFF</span>`:""}<button class="heart" onclick="event.stopPropagation();fav('${l.id}')">${S.favs.has(l.id)?"♥":"♡"}</button>${q?`<button class="qcart" onclick="event.stopPropagation();addCart('${l.id}')" title="Add to cart">+🛒</button>`:""}</div><div class="in"><div class="t">${esc(l.title)}</div><div>${stars(l)}</div><div class="price">${usd(l.price)}${off(l)?` <s class="mu" style="font-weight:400;font-size:13px">${usd(l.original_price)}</s>`:""}</div>${dg?`<div class="tag" style="background:#dff7ea;color:#17a673">⚡ Instant Download — Free Shipping</div>`:""}${l.bulk_min?`<div class="tag">${l.bulk_min}+ pcs: ${usd(l.bulk_price)}</div>`:""}<div>${S.star.has(l.seller_id)?`<span class="tag" style="background:#fff3d6;color:#b7791f">⭐ Star Seller</span> `:""}${badges(l)}</div><div class="mu">${n?soldTxt(n)+" · ":""}${dg?"Digital book":l.ships_to==="Worldwide"?"Ships worldwide":"Ships to "+esc(l.ships_to)}</div></div></div>`};
+const sorters={best:(a,b)=>new Date(b.created_at)-new Date(a.created_at),low:(a,b)=>a.price-b.price,high:(a,b)=>b.price-a.price,sold:(a,b)=>(b.sold_count||0)-(a.sold_count||0)};
+function startTick(){clearInterval(S.tick);const f=()=>{const e=$("#fcd");if(!e){clearInterval(S.tick);return}const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);const s=Math.floor((m-n)/1000);e.textContent=[Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,"0")).join(":")};f();S.tick=setInterval(f,1000)}
+function home(){
+  $("#app").innerHTML=`${S.saved?"<h2>♥ Saved items</h2>":`<div class="hero"><h1>Great finds, right next door.</h1><p>Shop deals or sell worldwide.</p><button class="hero-btn" onclick="openForm()">＋ Sell an Item</button></div>`}<div class="bar" style="margin-bottom:8px"><input placeholder="Search items…" value="${esc(S.q)}" oninput="S.q=this.value;grid()"></div>${S.saved?"":`<div class="tabsx">${TABS.map(([n],i)=>`<button class="${S.tab===i?"on":""}" onclick="S.tab=${i};home()">${n}</button>`).join("")}</div>`}<div class="bar"><button class="sec shipbtn" onclick="openShip()">🌍 ${esc(S.ship||"Worldwide")} ▾</button><select onchange="S.cat=this.value;grid()"><option value="">All categories</option>${CATS.map(c=>`<option ${S.cat===c?"selected":""}>${c}</option>`).join("")}</select></div><div id="x"></div><div class="bar" style="grid-template-columns:1fr"><select onchange="S.sort=this.value;grid()">${[["best","Sort: Best Match"],["low","Price: Low to High"],["high","Price: High to Low"],["sold","Most Sold"]].map(([v,t])=>`<option value="${v}" ${S.sort===v?"selected":""}>${t}</option>`).join("")}</select></div><div id="g"></div>`;grid();
+}
+function grid(){
+  const t={};S.listings.forEach(l=>t[l.seller_id]=(t[l.seller_id]||0)+(l.sold_count||0));S.star=new Set(Object.keys(t).filter(k=>t[k]>=50));
+  const q=S.q.toLowerCase();
+  const items=S.listings.filter(l=>(!S.saved||S.favs.has(l.id))&&tabOk(l)&&(!S.ship||l.ships_to==="Worldwide"||l.ships_to===S.ship)&&(!S.cat||l.category===S.cat)&&(!q||(l.title+" "+(l.description||"")+" "+(l.author||"")).toLowerCase().includes(q)));
+  const f=sorters[S.sort],list=[...items.filter(isPrio).sort(f),...items.filter(l=>!isPrio(l)).sort(f)];
+  const plain=!S.saved&&!S.tab&&!q&&!S.cat&&!S.ship&&S.listings.length,mh=[...S.listings].filter(l=>!l.sold).sort(sorters.sold).slice(0,6),fd=S.listings.filter(l=>!l.sold&&off(l)>0).slice(0,8);
+  $("#x").innerHTML=plain?(fd.length?`<div class="panel" style="background:linear-gradient(135deg,#ff4d6d,#ff7a59);color:#fff;border:0"><div class="row" style="justify-content:space-between"><b>⚡ Flash Deals</b><span>Ends in <b id="fcd">--:--:--</b></span></div><div class="snap" style="margin-top:10px">${fd.map(l=>`<div class="card" style="flex:0 0 120px;padding:0;color:var(--tx)" onclick="go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}><span class="sold">-${off(l)}%</span></div><div class="price" style="font-size:14px;padding:4px 6px">${usd(l.price)}</div></div>`).join("")}</div></div>`:"")+`<div class="fs">🚚 Free shipping on orders over $15</div><div class="panel" style="border-color:var(--pr);cursor:pointer" onclick="go('cart')"><b>🎁 Bundle &amp; Save (Pick 3+ for 15% OFF)</b><div class="mu">Add 3 or more items to your cart and the discount applies automatically.</div></div><div class="snap"><div style="background:linear-gradient(135deg,#ff7a59,#ff4d6d)" onclick="S.tab=1;home()"><h2 style="margin:0">Up to 70% OFF Deals</h2><p style="margin:4px 0 0">Tap to shop the sale →</p></div><div style="background:linear-gradient(135deg,#4f6bff,#7b5cff)"><h2 style="margin:0">Buy more, save more</h2><p style="margin:4px 0 0">Look for bulk prices like 10+ pcs.</p></div><div style="background:linear-gradient(135deg,#17a673,#2dc98e)" onclick="openForm()"><h2 style="margin:0">Sell worldwide</h2><p style="margin:4px 0 0">Post your first item free →</p></div></div><h3 style="margin:16px 0 8px">Must-haves</h3><div class="mh">${mh.map(l=>`<div onclick="go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"📦"}</div><div class="price" style="font-size:14px">${usd(l.price)}</div></div>`).join("")}</div><h3 style="margin:16px 0 8px">All items</h3>`:"";
+  $("#g").innerHTML=list.length?`<div class="grid">${list.map(card).join("")}</div>`:emptyHtml();
+  if(plain&&fd.length)startTick();
+}
+function emptyHtml(){
+  if(S.listings.length)return `<div class="empty">No items match your filters.</div>`;
+  const SM=[["phone","#4f6bff","Wireless earbuds",24,48,120,0],["shoe","#ff7a59","Running shoes",39,0,56,0],["bag","#17a673","Travel backpack",29,45,310,0],["phone","#7b5cff","Smart watch",59,84,88,0],["book","#f5a623","The Startup Playbook (E-Book PDF)",9.99,14.99,230,1],["book","#ff4d6d","Learn Python Fast (Paperback)",14.99,0,95,0]];
+  return `<div class="empty">No listings yet — be the first to post!<br><br><button onclick="openForm()">＋ Post Your First Item</button></div><h3 style="margin:8px 0">Preview: how listings will look</h3><div class="grid">${SM.map(([k,c,t,p,o,n,d])=>`<div class="card" style="cursor:default"><div class="img" style="background-image:${ph(k,c)}">${o?`<span class="sold">-${Math.round((1-p/o)*100)}% OFF</span>`:""}<span class="sold" style="top:auto;bottom:8px;background:#6b7394">SAMPLE</span></div><div class="in"><div class="t">${t}</div><div class="mu">☆ No reviews yet</div><div class="price">${usd(p)}${o?` <s class="mu" style="font-weight:400;font-size:13px">${usd(o)}</s>`:""}</div>${d?`<div class="tag" style="background:#dff7ea;color:#17a673">⚡ Instant Download — Free Shipping</div>`:""}<div class="mu">${soldTxt(n)}</div></div></div>`).join("")}</div>`;
+}
+function render(){
+  nav();clearInterval(S.poll);clearInterval(S.tick);const h=location.hash.slice(1);
+  if(!S.ready)return;
+  if(S.err){$("#app").innerHTML=`<div class="empty">${esc(S.err)}</div>`;return}
+  S.saved=h==="saved";
+  const R={categories:cats,cart:cartPage,settings,dashboard:dash,messages:inbox,support:supportPage,checkout,paid,orders:ordersPage,upgrade,admin};
+  if(R[h])return R[h]();
+  if(h.startsWith("item-"))return detail(h.slice(5));
+  if(h.startsWith("store-"))return store(h.slice(6));
+  if(h.startsWith("chat-"))return chat(h.slice(5,41),h.slice(42));
+  home();
+}
+async function dl(id){const l=S.listings.find(x=>x.id===id);if(!l||!l.file_path)return;const {data,error}=await sb.storage.from("ebooks").createSignedUrl(l.file_path,120);if(error)return alert("Download not available: "+error.message);window.open(data.signedUrl,"_blank")}
+function detail(id){
+  const l=S.listings.find(x=>x.id===id);
+  if(!l){$("#app").innerHTML=`<div class="empty">Item not found.<br><br><button onclick="go('')">Back</button></div>`;return}
+  const mine=S.user?.id===l.seller_id,dg=isDig(l);
+  $("#app").innerHTML=`<button class="sec" onclick="go('')">← Back</button><div class="panel detail" style="margin-top:12px"><div class="img" ${imgStyle(l.image_url)}>${safeUrl(l.image_url)?"":"No image"}${(isBoost(l)||l.featured)?'<span class="sold" style="background:#ff7a59">🔥 First Seen</span>':off(l)?`<span class="sold">-${off(l)}% OFF</span>`:""}</div><div><span class="tag">${esc(l.category)}</span>${l.condition?` <span class="tag">${esc(l.condition)}</span>`:""}${l.format?` <span class="tag">${esc(l.format)}</span>`:""}<h2 style="margin-top:8px">${esc(l.title)}</h2>${l.author?`<div class="mu">by ${esc(l.author)}</div>`:""}<div>${stars(l)} · ${l.sold_count||0} sold</div><div class="price" style="font-size:28px">${usd(l.price)}${off(l)?` <s class="mu" style="font-size:16px;font-weight:400">${usd(l.original_price)}</s>`:""}</div>${dg?`<div class="tag" style="background:#dff7ea;color:#17a673;margin:6px 0">⚡ Instant Download — Free Shipping</div>`:""}${l.bulk_min?`<div class="panel" style="padding:10px;margin:8px 0"><b>Bulk price</b><div>${l.bulk_min}+ pcs: ${usd(l.bulk_price)} each</div></div>`:""}<p class="mu">${dg?"Digital delivery":"Shipping: "+(Number(l.shipping_fee)?usd(l.shipping_fee):"Free")+" · "+(l.ships_to==="Worldwide"?"Ships worldwide":"Ships to "+esc(l.ships_to))}${l.city?"<br>📍 "+esc(l.city):""}</p><p><a href="#store-${l.seller_id}" style="color:var(--pr);font-weight:700">🏪 ${esc(l.seller_name)}</a><br>${badges(l)}</p><p style="white-space:pre-wrap">${esc(l.description)}</p>${shield()}${mine?`<button class="sec" onclick="go('dashboard')">Manage in My Listings</button>`:l.sold?`<b>This item has been sold.</b>`:`${S.owned.has(l.id)&&l.file_path?`<button style="background:#17a673;margin-bottom:8px" onclick="dl('${l.id}')">⬇ Download your book</button>`:""}<div class="row"><button onclick="addCart('${l.id}')">🛒 Add to Cart</button><button style="background:#ff7a59" onclick="buyNow('${l.id}')">Buy Now</button></div><div class="row" style="margin-top:8px"><button class="sec" onclick="chatWith('${l.id}')">💬 Chat with Seller</button><button class="sec" onclick="fav('${l.id}')">${S.favs.has(l.id)?"♥ Saved":"♡ Save"}</button></div>`}</div></div>`;
+}
+function store(sid){
+  const L=S.listings.filter(l=>l.seller_id===sid),f=S.flags[sid]||{};
+  $("#app").innerHTML=`<button class="sec" onclick="history.back()">← Back</button><div class="panel" style="margin-top:12px"><h2>🏪 ${esc(L[0]?.seller_name||"Seller")}</h2>${f.verified?`<span class="tag" style="background:#dff7ea;color:#17a673">✔ Verified Seller</span> `:""}${f.pro?`<span class="tag">⭐ Pro Seller</span>`:""}<div class="mu">${L.length} items · ${L.reduce((a,l)=>a+(l.sold_count||0),0)} sold</div></div><div class="grid">${L.map(card).join("")}</div>`;
+}
+function calc(){
+  const pb=S.cartRows.length>=3?15:0,pp=S.promo?.percent||0;
+  const lines=S.cartRows.map(r=>({l:S.listings.find(x=>x.id===r.listing_id),q:r.qty})).filter(x=>x.l&&!x.l.sold);
+  lines.forEach(x=>{x.sub=unit(x.l,x.q)*x.q;x.discB=Math.round(x.sub*pb)/100;x.discP=Math.round(x.sub*pp)/100;x.disc=Math.round(x.sub*Math.min(pb+pp,90))/100;x.ship=(isDig(x.l)||x.sub-x.disc>15)?0:Number(x.l.shipping_fee)||0;x.total=+(x.sub-x.disc+x.ship).toFixed(2)});
+  const sum=k=>lines.reduce((a,x)=>a+x[k],0);
+  return {lines,sub:sum("sub"),discB:sum("discB"),discP:sum("discP"),disc:sum("disc"),ship:sum("ship"),total:sum("total"),pb};
+}
+const sum2=c=>rw("Items",usd(c.sub))+(c.pb?rw("Bundle (15% OFF)","−"+usd(c.discB)):"")+(c.discP?rw("Promo","−"+usd(c.discP)):"")+rw("Shipping",c.ship?usd(c.ship):"Free")+`<div class="row" style="justify-content:space-between"><b>Total (USD)</b><b class="price">${usd(c.total)}</b></div>`;
+function cartPage(){
+  if(!S.user)return login();
+  const c=calc(),n=S.cartRows.length;
+  $("#app").innerHTML=`<h2>🛒 Your cart</h2>${c.lines.length?`<div class="panel" style="padding:12px"><b>${n>=3?"🎉 Bundle discount applied: 15% OFF":"🎁 Add "+(3-n)+" more item"+(3-n>1?"s":"")+" to unlock 15% OFF your bundle!"}</b><div style="height:8px;background:var(--pr2);border-radius:8px;margin-top:8px"><div style="height:8px;width:${Math.min(100,n/3*100)}%;background:#17a673;border-radius:8px"></div></div></div>`+c.lines.map(({l,q})=>`<div class="panel row" style="margin-bottom:10px"><div class="img" style="width:72px;height:72px;aspect-ratio:auto;border-radius:10px" ${imgStyle(l.image_url)}></div><div style="flex:1;min-width:130px"><div class="t">${esc(l.title)}</div><div class="price">${usd(unit(l,q))} each</div>${l.bulk_min&&q<l.bulk_min?`<div class="mu">Buy ${l.bulk_min}+ for ${usd(l.bulk_price)} each</div>`:""}</div><div class="row"><button class="sec" onclick="setQty('${l.id}',${q-1})">−</button><b>${q}</b><button class="sec" onclick="setQty('${l.id}',${q+1})">＋</button></div><button class="dan" onclick="rmCart('${l.id}')">✕</button></div>`).join("")+`<div class="panel"><div class="row"><input id="pc" placeholder="Promo code" style="flex:1" value="${esc(S.promo?.code||"")}"><button class="sec" onclick="applyPromo()">Apply</button></div><div id="pm" class="mu">${S.promo?"✔ "+S.promo.percent+"% off applied":""}</div>${sum2(c)}<button style="width:100%;margin-top:12px" onclick="go('checkout')">Checkout</button></div>`:`<div class="empty">Your cart is empty.<br><br><button onclick="go('')">Browse items</button></div>`}`;
+}
+async function applyPromo(){
+  const code=$("#pc").value.trim().toUpperCase();if(!code){S.promo=null;return render()}
+  let {data}=await sb.from("promos").select("*").eq("code",code).eq("active",true).maybeSingle();
+  if(!data){const r=await sb.from("user_coupons").select("*").eq("code",code).eq("used",false).maybeSingle();data=r.data}
+  if(data){S.promo=data;render()}else{S.promo=null;$("#pm").innerHTML='<span class="er">Invalid or expired code.</span>'}
+}
+async function makeOrders(addr){
+  const ids=[];
+  for(const {l,q,sub,disc,ship,total} of calc().lines){
+    const comm=l.official?total:+(total*COMM).toFixed(2);
+    const {data,error}=await sb.from("orders").insert({seller_id:l.seller_id,listing_id:l.id,title:l.title,qty:q,item_total:sub,shipping:ship,discount:disc,total,commission:comm,seller_payout:+(total-comm).toFixed(2),ship_address:addr,promo_code:S.promo?.code||null}).select("id").single();
+    if(error)throw error;ids.push(data.id);
+  }
+  return ids;
+}
+async function checkout(){
+  if(!S.user)return login();
+  const c=calc();if(!c.lines.length)return go("cart");
+  const ad=await getAddrs(),dig=c.lines.every(x=>isDig(x.l));
+  $("#app").innerHTML=`<h2>Checkout</h2><div class="panel" style="background:var(--pr2);border-color:var(--pr)"><div style="font-size:30px;float:left;margin-right:10px">🛡️</div><b>Pay confidently — Sokoni Buyer Protection</b><div class="mu">Full refund if the item isn’t as described or doesn’t arrive. Open a dispute from Help &amp; Support.</div></div>${dig?"":`<div class="panel"><b>Shipping address</b>${ad.length?`<select onchange="$('#addr').value=this.value" style="margin:8px 0"><option value="">Use a saved address…</option>${ad.map(a=>`<option>${esc(a)}</option>`).join("")}</select>`:""}<textarea id="addr" rows="3" placeholder="Full name, street, city, country"></textarea></div>`}<div class="panel"><b>Order summary</b>${c.lines.map(({l,q})=>rw(esc(l.title)+" × "+q,usd(unit(l,q)*q))).join("")}${sum2(c)}<div id="er" class="er"></div><button style="width:100%;margin-top:12px" id="pay" onclick="pay()">Pay ${usd(c.total)} by card</button><button class="sec" style="width:100%;margin-top:8px" id="pcr" ${S.credit>=c.total&&c.total>0?"":"disabled"} onclick="payCredit()">Pay with Credit Balance (${usd(S.credit)})</button><div style="margin-top:10px"><span class="pm">Apple Pay</span><span class="pm">Google Pay</span><span class="pm">Debit</span><span class="pm">Credit</span><span class="pm">Virtual / Prepaid</span><span class="pm">Visa</span><span class="pm">Mastercard</span><span class="pm off">PayPal · soon</span></div><p class="mu">Cards and wallets are processed securely by Stripe. The platform fee is paid by the seller.</p></div>`;
+}
+function addrOf(c){const dig=c.lines.every(x=>isDig(x.l)),a=dig?"Digital order":($("#addr").value||"").trim();return a.length>=10?a:null}
+async function pay(){
+  const er=$("#er"),btn=$("#pay"),a=addrOf(calc());if(!a)return er.textContent="Please enter your shipping address.";
+  btn.disabled=true;btn.textContent="Processing…";er.textContent="";
+  try{const ids=await makeOrders(a);const {data,error}=await sb.functions.invoke("create-checkout",{body:{order_ids:ids}});
+    if(error||!data?.url){er.innerHTML="Card payments aren’t connected yet. Your order was saved as <b>Pending payment</b> in My Orders.";btn.disabled=false;btn.textContent="Try again";return}
+    location.href=data.url}catch(e){er.textContent=e.message;btn.disabled=false;btn.textContent="Try again"}
+}
+async function payCredit(){
+  const er=$("#er"),a=addrOf(calc());if(!a)return er.textContent="Please enter your shipping address.";
+  try{const ids=await makeOrders(a);const {error}=await sb.rpc("pay_with_credit",{p_ids:ids});if(error)throw error;await sb.from("cart_items").delete().eq("user_id",S.user.id);await loadFavs();go("paid")}catch(e){er.textContent=e.message}
+}
+const tl=s=>{const st=["Paid","Shipped","Delivered"],i=st.indexOf(s);return s==="Pending payment"?`<div class="mu">⏳ Waiting for payment</div>`:`<div class="row" style="gap:6px;margin:8px 0">${st.map((x,k)=>`<span class="tag" style="${k<=i?"background:var(--pr);color:#fff":"opacity:.4"}">${k<=i?"✔":"○"} ${x}</span>`).join('<span class="mu">→</span>')}</div>`};
+async function confirmDel(id){const {error}=await sb.from("orders").update({status:"Delivered"}).eq("id",id);if(error)alert(error.message);else ordersPage()}
+async function ordersPage(){
+  if(!S.user)return login();
+  const {data}=await sb.from("orders").select("*").order("created_at",{ascending:false}),all=data||[];
+  const mine=all.filter(o=>o.buyer_id===S.user.id),sales=all.filter(o=>o.seller_id===S.user.id);
+  const dlb=o=>{const l=S.listings.find(x=>x.id===o.listing_id);return l&&l.file_path&&o.status!=="Pending payment"?`<button style="background:#17a673;margin-top:6px" onclick="dl('${l.id}')">⬇ Instant Download</button>`:""};
+  $("#app").innerHTML=`<h2>📦 Your Orders</h2>${mine.length?mine.map(o=>`<div class="panel">${receipt(o)}${tl(o.status)}${pendNote(o)}${dlb(o)}${o.status==="Shipped"?`<button onclick="confirmDel('${o.id}')">✔ Confirm Delivery</button>`:""}</div>`).join(""):`<div class="empty">No orders yet.</div>`}<h2 style="margin-top:24px">Sales</h2>${sales.length?sales.map(o=>`<div class="panel"><b>${esc(o.title)}</b> × ${o.qty} — ${usd(o.total)}<div class="mu">You receive ${usd(o.seller_payout)} (after the platform fee ${usd(o.commission)})</div><div class="mu" style="white-space:pre-wrap">Ship to: ${esc(o.ship_address||"")}</div>${tl(o.status)}${o.status==="Paid"?`<button onclick="setStatus('${o.id}','Shipped')">Mark shipped</button>`:""}</div>`).join(""):`<div class="empty">No sales yet.</div>`}`;
+}
+function upgrade(){
+  if(!S.user)return login();
+  const mine=S.listings.filter(l=>l.seller_id===S.user.id),pro=(S.flags[S.user.id]||{}).pro,go_=k=>CFG.PAY_LINKS[k]?window.open(CFG.PAY_LINKS[k],"_blank"):alert("This payment link isn’t set up yet.");window._go=go_;
+  $("#app").innerHTML=`<h2>🚀 Upgrade / Boost</h2><div class="panel"><b>Starter — Free</b><div class="mu">Up to 2 listings. You’re using ${mine.length} of 2.</div></div><div class="panel" style="border-color:var(--pr)"><b>Sokoni Pro — $4.99/month</b><div class="mu">Unlimited listings, ⭐ Pro Seller badge and priority placement.</div>${pro?`<div class="tag" style="margin-top:8px">✔ You’re Pro</div>`:`<button style="margin-top:8px" onclick="_go('pro')">Upgrade to Pro</button>`}</div><div class="panel"><b>🔥 First-Seen Top Boost — $1.99</b><div class="mu">Pins one item to the top of Home for 7 days.</div><button style="margin:8px 0" onclick="_go('boost')">Buy a Boost</button>${S.freeBoosts?`<div class="mu">You have ${S.freeBoosts} free boost${S.freeBoosts>1?"s":""}. Pick an item:</div>${mine.map(l=>`<button class="sec" style="margin:4px 4px 0 0" onclick="useBoost('${l.id}')">${esc(l.title.slice(0,22))}</button>`).join("")}`:""}<p class="mu">After you pay, your plan or boost is switched on by the Sokoni team.</p></div>`;
+}
+async function useBoost(id){const {error}=await sb.rpc("use_free_boost",{p_listing:id});if(error)alert(error.message);else{toast("Boost active for 7 days 🔥");await loadListings();await loadFavs()}}
+const MET=["MTN MoMo","Airtel Money","M-Pesa","WorldRemit","Remitly","PayPal","Payoneer","USDT","Bank Transfer"];
+function openWithdraw(avail){
+  const m=modal(`<h2>Withdraw funds</h2><p class="mu">Available seller earnings: <b>${usd(avail)}</b> (minimum $10.00). Only money you earned from delivered sales can be withdrawn.</p><label>Amount (USD)</label><input id="wa" type="number" min="10" step="0.01"><label>Payout method</label><select id="wm">${MET.map(x=>`<option>${x}</option>`).join("")}</select><label>Account details (phone number, email or bank info)</label><textarea id="wd" rows="3"></textarea><div id="er" class="er"></div><div class="row" style="margin-top:12px"><button id="ok">Submit request</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  m.querySelector("#ok").onclick=async()=>{const {error}=await sb.rpc("request_withdrawal",{p_amount:parseFloat(m.querySelector("#wa").value),p_method:m.querySelector("#wm").value,p_details:m.querySelector("#wd").value.trim()});if(error)return m.querySelector("#er").textContent=error.message;m.remove();toast("Withdrawal requested ✓");settings()};
+}
+async function redeem(){const c=$("#gc").value.trim();if(!c)return;const {data,error}=await sb.rpc("redeem_gift_card",{p_code:c});if(error)return alert(error.message);toast("+"+usd(data)+" added ✓");await loadFavs()}
+async function checkin(){const {data,error}=await sb.rpc("daily_checkin");if(error)return alert(error.message);toast("Day "+data.streak+": +"+usd(data.amount));await loadFavs()}
+async function doSpin(){
+  const b=$("#spb");b.disabled=true;const {data,error}=await sb.rpc("spin");if(error){b.disabled=false;return alert(error.message)}
+  $("#wh").style.transform=`rotate(${1800+Math.random()*360}deg)`;
+  setTimeout(async()=>{alert("🎉 You won: "+data.prize+(data.code?"\nYour code: "+data.code:""));await loadFavs()},2700);
+}
+async function settings(){
+  const th=document.documentElement.dataset.theme||"auto";
+  const look=`<div class="panel"><b>Appearance</b><label>Theme</label><select onchange="setTheme(this.value)">${["auto","light","dark"].map(t=>`<option value="${t}" ${th===t?"selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select></div>`;
+  if(!S.user){$("#app").innerHTML=`<h2>⚙️ Settings</h2><div class="panel"><p class="mu">You’re not logged in.</p><button onclick="openAuth(false)">Log in</button> <button class="sec" onclick="openAuth(true)">Sign up</button></div>`+look;return}
+  const q=async t=>{try{return (await t).data||[]}catch(e){return[]}},me=S.user.id,H=24*3600e3;
+  const [ad,cp,uc,ck,sp,wd,oo]=await Promise.all([getAddrs(),q(sb.from("promos").select("code,percent").eq("active",true)),q(sb.from("user_coupons").select("code,percent").eq("used",false)),q(sb.from("rewards_log").select("*").eq("kind","checkin").order("created_at",{ascending:false}).limit(1)),q(sb.from("rewards_log").select("*").eq("kind","spin").order("created_at",{ascending:false}).limit(1)),q(sb.from("withdrawals").select("*").order("created_at",{ascending:false})),q(sb.from("orders").select("seller_payout,seller_id,status,buyer_id"))]);
+  const earned=oo.filter(o=>o.seller_id===me&&o.status==="Delivered").reduce((a,o)=>a+Number(o.seller_payout),0),taken=wd.filter(w=>w.user_id===me&&w.status!=="Rejected").reduce((a,w)=>a+Number(w.amount),0),avail=Math.max(0,earned-taken);
+  const lc=ck[0],streak=lc&&Date.now()-new Date(lc.created_at)<2*H?Number(lc.prize)||0:0,canC=!lc||Date.now()-new Date(lc.created_at)>=H,canS=!sp[0]||Date.now()-new Date(sp[0].created_at)>=H;
+  let hist=[];try{hist=JSON.parse(localStorage.getItem("sokoni-hist")||"[]").map(id=>S.listings.find(l=>l.id===id)).filter(Boolean).slice(0,10)}catch(e){}
+  const nl=S.listings.filter(l=>l.seller_id===me).length,nc=cp.length+uc.length;
+  $("#app").innerHTML=`<h2>👤 My Account</h2><div class="panel row"><div style="width:52px;height:52px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc(uname()[0].toUpperCase())}</div><div><b>${esc(uname())}</b><div class="mu">${esc(S.user.email)}</div></div></div><div class="panel"><div class="row" style="justify-content:space-between"><div><div class="mu">Credit Balance</div><div class="price" style="font-size:26px">${usd(S.credit)}</div></div><button onclick="openWithdraw(${avail})">Withdraw Funds</button></div><div class="mu">Credit can be spent on Sokoni. Withdrawals come from your seller earnings (${usd(avail)} available).</div>${wd.filter(w=>w.user_id===me).slice(0,3).map(w=>`<div class="msg mu">${usd(w.amount)} · ${esc(w.method)} · <b>${esc(w.status)}</b></div>`).join("")}</div><div class="stats"><div class="panel" onclick="document.getElementById('cpn').scrollIntoView()"><div class="mu">Coupons &amp; Offers</div><div class="price">${nc}</div></div><div class="panel" onclick="go('orders')"><div class="mu">Your Orders</div><div class="price">${oo.filter(o=>o.buyer_id===me).length}</div></div><div class="panel" onclick="go('dashboard')"><div class="mu">My Listings</div><div class="price">${nl}</div></div><div class="panel" onclick="go('upgrade')"><div class="mu">Seller plan</div><div class="price" style="font-size:16px">${(S.flags[me]||{}).pro?"Pro":"Starter"} ›</div></div></div><div class="panel"><b>🎰 Daily Rewards &amp; Spin</b><div class="row" style="margin:10px 0">${[1,2,3,4,5,6,7].map(k=>`<span class="tag" style="${k<=streak?"background:var(--pr);color:#fff":""}">Day ${k}</span>`).join("")}</div><button ${canC?"":"disabled"} onclick="checkin()">${canC?"Check In Today":"Checked in ✔"}</button><div id="wh" style="width:130px;height:130px;border-radius:50%;margin:14px auto 4px;border:4px solid var(--pr);background:conic-gradient(#ff7a59 0 20%,#4f6bff 0 40%,#17a673 0 60%,#f5a623 0 80%,#ff4d6d 0 100%);transition:transform 2.5s cubic-bezier(.2,.8,.2,1)"></div><div style="text-align:center">▲</div><button id="spb" style="width:100%" ${canS?"":"disabled"} onclick="doSpin()">${canS?"Spin to Win (1 free spin today)":"Next free spin tomorrow"}</button><p class="mu">Prizes: $0.50 or $1.00 credit, 10% or 15% coupons, or a Free Boost.</p></div><div class="panel"><b>🎁 Gift Cards</b><div class="row" style="margin:10px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="_gift(${a})">$${a}</button>`).join("")}</div><div class="row"><input id="gc" placeholder="Enter gift card code" style="flex:1"><button onclick="redeem()">Redeem</button></div></div><div class="panel" id="cpn"><b>🎟️ Coupons &amp; Offers</b>${[...cp.map(c=>[c.code,c.percent]),...uc.map(c=>[c.code,c.percent])].map(([c,p])=>`<div class="msg"><b>${esc(c)}</b> — ${p}% off. Enter it in your cart.</div>`).join("")||`<p class="mu">No coupons right now.</p>`}</div><div class="panel"><div class="row" style="justify-content:space-between"><b>📍 Saved Addresses</b><button class="sec" onclick="addAddr()">＋ Add</button></div>${ad.map((a,i)=>`<div class="msg row" style="justify-content:space-between"><span style="white-space:pre-wrap">${esc(a)}</span><button class="dan" onclick="delAddr(${i})">✕</button></div>`).join("")||`<p class="mu">No saved addresses.</p>`}</div><div class="panel"><b>🕘 Browsing History</b>${hist.length?`<div class="snap" style="margin-top:10px">${hist.map(l=>`<div class="card" style="flex:0 0 110px;padding:0" onclick="go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}></div><div class="price" style="font-size:13px;padding:4px 6px">${usd(l.price)}</div></div>`).join("")}</div>`:`<p class="mu">Items you view will show up here.</p>`}</div><div class="panel"><b>⭐ Reviews</b><p class="mu">Reviews are coming soon.</p></div><div class="panel"><b>Account</b><label>Display name</label><input id="sn" maxlength="40" value="${esc(uname())}"><div id="sm" class="mu"></div><div class="row" style="margin-top:12px"><button onclick="saveName()">Save name</button><button class="sec" onclick="go('support')">🎧 Help</button><button class="sec" onclick="sb.auth.signOut();go('')">Log out</button></div></div>`+look;
+}
+window._gift=a=>CFG.PAY_LINKS["gift"+a]?window.open(CFG.PAY_LINKS["gift"+a],"_blank"):alert("Gift card purchase isn’t set up yet. If you have a code, redeem it below.");
+async function admErr(p){const r=await p;if(r.error)alert(r.error.message);return r}
+async function admin(){
+  if(!S.isAdmin)return $("#app").innerHTML=`<div class="empty">Admin only.</div>`;
+  const q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const [o,w,inc,gc]=await Promise.all([q(sb.from("orders").select("commission,total,status")),q(sb.from("withdrawals").select("*").order("created_at",{ascending:false})),q(sb.from("platform_income").select("*").order("created_at",{ascending:false}).limit(30)),q(sb.from("gift_cards").select("*").order("created_at",{ascending:false}).limit(8))]);
+  const comm=o.filter(x=>x.status!=="Pending payment").reduce((a,x)=>a+Number(x.commission),0),kind=k=>inc.filter(i=>k.includes(i.kind)).reduce((a,i)=>a+Number(i.amount),0),pend=w.filter(x=>x.status==="Pending").reduce((a,x)=>a+Number(x.amount),0);
+  const sellers=[...new Map(S.listings.map(l=>[l.seller_id,l.seller_name])).entries()];
+  $("#app").innerHTML=`<h2>🛠️ Admin Dashboard</h2><div class="stats"><div class="panel"><div class="mu">Total Platform Revenue</div><div class="price">${usd(comm+kind(["Pro","Boost","Gift"]))}</div></div><div class="panel"><div class="mu">Marketplace commission (10%; 100% on Official)</div><div class="price">${usd(comm)}</div></div><div class="panel"><div class="mu">Subscription &amp; Boost earnings</div><div class="price">${usd(kind(["Pro","Boost"]))}</div></div><div class="panel"><div class="mu">Pending withdrawals</div><div class="price">${usd(pend)}</div></div></div><div class="panel"><b>Withdrawal requests</b>${w.map(x=>`<div class="msg"><b>${usd(x.amount)}</b> · ${esc(x.method)} · <span class="tag">${esc(x.status)}</span><div class="mu" style="white-space:pre-wrap">${esc(x.details)}</div>${x.status==="Pending"?`<button onclick="admPaid('${x.id}')">Mark as Paid</button>`:""}</div>`).join("")||`<p class="mu">No requests.</p>`}</div><div class="panel"><b>Items</b>${S.listings.map(l=>`<div class="msg"><b>${esc(l.title)}</b> <span class="mu">· ${esc(l.seller_name)}</span><div class="row" style="margin-top:6px"><button class="${l.featured?"":"sec"}" onclick="admL('${l.id}',{featured:${!l.featured}})">🔥 Featured</button><button class="${l.official?"":"sec"}" onclick="admL('${l.id}',{official:${!l.official}})">🏬 Official Store</button><button class="${isBoost(l)?"":"sec"}" onclick="admL('${l.id}',{boosted_until:${isBoost(l)?"null":`'${new Date(Date.now()+7*864e5).toISOString()}'`}})">Boost 7d</button></div></div>`).join("")}</div><div class="panel"><b>Sellers</b>${sellers.map(([id,n])=>{const f=S.flags[id]||{};return `<div class="msg row" style="justify-content:space-between"><span>${esc(n)}</span><span><button class="${f.verified?"":"sec"}" onclick="admF('${id}','verified',${!f.verified})">✔ Verified</button> <button class="${f.pro?"":"sec"}" onclick="admF('${id}','pro',${!f.pro})">⭐ Pro</button></span></div>`}).join("")}</div><div class="panel"><b>Gift card codes</b><div class="row" style="margin:8px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="admGift(${a})">+ $${a}</button>`).join("")}</div>${gc.map(g=>`<div class="msg"><b>${esc(g.code)}</b> $${g.amount} ${g.redeemed_by?"· used":"· unused"}</div>`).join("")}</div><div class="panel"><b>Record income (Pro, Boost, Gift sales)</b><div class="row" style="margin-top:8px"><select id="ik"><option>Pro</option><option>Boost</option><option>Gift</option></select><input id="ia" type="number" step="0.01" placeholder="USD" style="flex:1"><button onclick="admInc()">Add</button></div></div>`;
+}
+async function admPaid(id){await admErr(sb.from("withdrawals").update({status:"Paid",paid_at:new Date().toISOString()}).eq("id",id));admin()}
+async function admL(id,p){await admErr(sb.from("listings").update(p).eq("id",id));await loadListings();admin()}
+async function admF(id,k,v){await admErr(sb.from("seller_flags").upsert({id,[k]:v}));await loadListings();admin()}
+async function admGift(a){const code=("SK"+Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,6)).toUpperCase();await admErr(sb.from("gift_cards").insert({code,amount:a}));admin()}
+async function admInc(){const a=parseFloat($("#ia").value);if(!(a>0))return;await admErr(sb.from("platform_income").insert({kind:$("#ik").value,amount:a}));admin()}
+function openForm(id){
+  if(!S.user)return openAuth(false);
+  const l=id?S.listings.find(x=>x.id===id):{};
+  const opt=(a,v)=>a.map(c=>`<option ${v===c?"selected":""}>${c}</option>`).join("");
+  const m=modal(`<h2>${id?"Edit item":"Create listing"}</h2><label>Title</label><input id="ft" maxlength="80" value="${esc(l.title||"")}"><label>Category</label><select id="fc">${opt(CATS,l.category||"")}</select><div id="bk" style="display:none"><label>Author</label><input id="fa" maxlength="80" value="${esc(l.author||"")}"><label>Format</label><select id="ff">${opt(FORMATS,l.format)}</select><div id="fl"><label>Book file (PDF or EPUB) ${l.file_path?"— leave empty to keep current":""}</label><input id="ffile" type="file" accept=".pdf,.epub,application/pdf,application/epub+zip"><div class="mu">Buyers can download it only after they pay.</div></div></div><label>Price (USD)</label><input id="fp" type="number" min="0" step="0.01" value="${l.price??""}"><label>Original price (optional, shows a discount badge)</label><input id="fo" type="number" min="0" step="0.01" value="${l.original_price??""}"><label>Bulk deal (optional): buy this many or more…</label><input id="fbm" type="number" min="2" value="${l.bulk_min??""}"><label>…for this price each (USD)</label><input id="fbp" type="number" min="0" step="0.01" value="${l.bulk_price??""}"><div id="sh"><label>Shipping fee (USD, 0 = free)</label><input id="fs" type="number" min="0" step="0.01" value="${l.shipping_fee??0}"><label>Ships to</label><select id="fst"><option>Worldwide</option>${opt(SHIP,l.ships_to)}</select><label>Condition</label><select id="fcond">${opt(CONDS,l.condition)}</select></div><label>Item location (city, country)</label><input id="fcity" maxlength="80" value="${esc(l.city||"")}"><label>Description</label><textarea id="fd" rows="4" maxlength="1500">${esc(l.description||"")}</textarea><label>Photo ${id?"(leave empty to keep current)":""}</label><input id="fimg" type="file" accept="image/*"><div id="er" class="er"></div><div class="row" style="margin-top:14px"><button id="ok">${id?"Save changes":"Publish"}</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div>`);
+  const v=s=>m.querySelector(s).value.trim(),er=t=>m.querySelector("#er").textContent=t,num=s=>v(s)===""?null:parseFloat(v(s));
+  const sync=()=>{const bk=v("#fc")==="Books",dg=bk&&v("#ff").startsWith("Digital");m.querySelector("#bk").style.display=bk?"block":"none";m.querySelector("#fl").style.display=dg?"block":"none";m.querySelector("#sh").style.display=dg?"none":"block"};
+  m.querySelector("#fc").onchange=sync;m.querySelector("#ff").onchange=sync;sync();
+  m.querySelector("#ok").onclick=async e=>{
+    const btn=e.target,price=num("#fp"),orig=num("#fo"),bm=num("#fbm"),bp=num("#fbp"),bk=v("#fc")==="Books",dg=bk&&v("#ff").startsWith("Digital"),file=m.querySelector("#fimg").files[0],bf=m.querySelector("#ffile").files[0];
+    if(!v("#ft"))return er("Please add a title.");
+    if(!(price>=0))return er("Enter a valid price in USD.");
+    if(orig!==null&&orig<=price)return er("Original price must be higher than the price.");
+    if((bm===null)!==(bp===null)||(bp!==null&&bp>=price))return er("Bulk deal needs a quantity and a price lower than the normal price.");
+    if(bk&&!v("#fa"))return er("Please add the author.");
+    if(dg&&!bf&&!l.file_path)return er("Please upload the book file (PDF or EPUB).");
+    btn.disabled=true;btn.textContent="Saving…";er("");
+    try{
+      const row={title:v("#ft"),category:v("#fc"),price,original_price:orig,bulk_min:bm,bulk_price:bp,shipping_fee:dg?0:num("#fs")||0,ships_to:dg?"Worldwide":v("#fst"),city:v("#fcity"),country:"",condition:dg?"New":v("#fcond"),description:v("#fd"),image_url:l.image_url||"",author:bk?v("#fa"):null,format:bk?v("#ff"):null,file_path:dg?(l.file_path||null):null};
+      if(file)row.image_url=await uploadImg(file);
+      if(dg&&bf){const path=`${S.user.id}/${Date.now()}-${bf.name.replace(/[^\w.-]/g,"_")}`;const u=await sb.storage.from("ebooks").upload(path,bf);if(u.error)throw u.error;row.file_path=path}
+      const {error}=id?await sb.from("listings").update(row).eq("id",id):await sb.from("listings").insert({...row,seller_name:uname()});
+      if(error)throw error;
+      m.remove();loadListings();
+    }catch(x){const t=x.message||"Couldn’t save.";if(t.includes("LISTING_LIMIT")){m.remove();toast("Free plan limit reached — upgrade to post more");go("upgrade")}else{er(t);btn.disabled=false;btn.textContent=id?"Save changes":"Publish"}}
+  };
+}
+
+/* ===== Sokoni v5: manual payments (MTN MoMo etc.), admin approvals ===== */
+S.cfg={};S.pendPay=[];
+var _l2=loadListings;loadListings=async function(){try{const {data}=await sb.from("site_settings").select("*");S.cfg=Object.fromEntries((data||[]).map(r=>[r.key,r.value]))}catch(e){}return _l2()};
+var _op=ordersPage;ordersPage=async function(){try{S.pendPay=(await sb.from("payments").select("order_ids").eq("status","Pending")).data||[]}catch(e){S.pendPay=[]}return _op()};
+const pendNote=o=>S.pendPay.some(p=>(p.order_ids||[]).includes(o.id))?`<div class="tag" style="margin:4px 0">💬 Payment submitted — awaiting confirmation</div>`:"";
+const ugx=n=>S.cfg.ugx_rate?" ≈ UGX "+Math.round(n*S.cfg.ugx_rate).toLocaleString("en-US"):"";
+const cpBtn=t=>`<button class="sec" style="padding:4px 10px" onclick="navigator.clipboard.writeText(decodeURIComponent('${encodeURIComponent(t)}'));toast('Copied ✓')">Copy</button>`;
+const detRow=(k,v)=>`<div class="row" style="justify-content:space-between;margin:6px 0"><span><span class="mu">${k}</span><br><b>${esc(v||"Not set yet")}</b></span>${v?cpBtn(v):""}</div>`;
+function openPay(kind,o){
+  if(!S.user)return openAuth(false);
+  const c=S.cfg,amt=o.amount,titles={order:"Your order",pro:"Sokoni Pro (30 days)",boost:"First-Seen Boost (7 days)",gift:"Sokoni Gift Card"};
+  const meths=[["A","🌍 International transfer to MTN MoMo (Sendwave, WorldRemit, Remitly, Wise)"],["B","📱 MTN MoMo direct (Uganda & East Africa)"],...(c.usdt_address?[["C","🪙 USDT crypto"]]:[])];
+  const m=modal(`<h2>Pay ${usd(amt)}</h2><p class="mu">${titles[kind]}${ugx(amt)}</p><label>Payment method</label><select id="pmth">${meths.map(([k,t])=>`<option value="${k}">${t}</option>`).join("")}</select><div id="pdet" class="panel" style="margin-top:10px"></div><label>Transaction reference / receipt ID</label><input id="ptx" maxlength="60" placeholder="From your transfer receipt"><div id="er" class="er"></div><div class="row" style="margin-top:12px"><button id="ok">I’ve paid — submit</button><button class="sec" onclick="this.closest('.modal').remove()">Cancel</button></div><p class="mu">Your order or plan is switched on after we confirm the money arrived.</p>`);
+  const sel=m.querySelector("#pmth");if(o.preset&&meths.some(x=>x[0]===o.preset))sel.value=o.preset;
+  const draw=()=>{const k=sel.value;m.querySelector("#pdet").innerHTML=k==="C"?`<b>Send USDT${c.usdt_network?" on "+esc(c.usdt_network):""}</b>${detRow("Wallet address",c.usdt_address)}<div class="mu">Amount: ${usd(amt)} in USDT.</div>`:`<b>${k==="A"?"Send "+usd(amt)+" with any transfer app":"Send by MTN Mobile Money"}</b>${detRow("Country","Uganda")}${detRow("Network","MTN Mobile Money")}${detRow("Recipient name",c.momo_name)}${detRow("MTN MoMo number",c.momo_number)}${detRow(k==="A"?"Amount to send (USD)":"Amount",k==="A"?amt.toFixed(2):(c.ugx_rate?"UGX "+Math.round(amt*c.ugx_rate):usd(amt)))}`};
+  sel.onchange=draw;draw();
+  m.querySelector("#ok").onclick=async e=>{
+    const tx=m.querySelector("#ptx").value.trim(),er=t=>m.querySelector("#er").textContent=t,k=sel.value;
+    if(tx.length<4)return er("Enter the transaction ID from your receipt.");
+    if(k!=="C"&&!c.momo_number)return er("Payment details aren’t set up yet. Please contact support.");
+    e.target.disabled=true;e.target.textContent="Submitting…";
+    try{
+      const ids=kind==="order"?await makeOrders(o.addr):null;
+      const {error}=await sb.rpc("submit_payment",{p_kind:kind,p_ids:ids,p_listing:o.listing||null,p_gift:o.gift||null,p_method:{A:"International transfer to MTN MoMo",B:"MTN MoMo direct",C:"USDT"}[k],p_txn:tx});
+      if(error)throw error;
+      m.remove();toast("Submitted ✓ awaiting confirmation");
+      if(kind==="order"){await sb.from("cart_items").delete().eq("user_id",S.user.id);await loadFavs();go("orders")}else go("settings");
+    }catch(x){er(String(x.message).includes("payments_txn_unique")?"That transaction ID was already submitted.":x.message);e.target.disabled=false;e.target.textContent="I’ve paid — submit"}
+  };
+}
+function manual(k){const c=calc(),a=addrOf(c);if(!a)return $("#er").textContent="Please enter your shipping address.";openPay("order",{amount:c.total,addr:a,preset:k})}
+async function checkout(){
+  if(!S.user)return login();
+  const c=calc();if(!c.lines.length)return go("cart");
+  const ad=await getAddrs(),dig=c.lines.every(x=>isDig(x.l));
+  $("#app").innerHTML=`<h2>Checkout</h2><div class="panel" style="background:var(--pr2);border-color:var(--pr)"><div style="font-size:30px;float:left;margin-right:10px">🛡️</div><b>Pay confidently — Sokoni Buyer Protection</b><div class="mu">Full refund if the item isn’t as described or doesn’t arrive. Open a dispute from Help &amp; Support.</div></div>${dig?"":`<div class="panel"><b>Shipping address</b>${ad.length?`<select onchange="$('#addr').value=this.value" style="margin:8px 0"><option value="">Use a saved address…</option>${ad.map(a=>`<option>${esc(a)}</option>`).join("")}</select>`:""}<textarea id="addr" rows="3" placeholder="Full name, street, city, country"></textarea></div>`}<div class="panel"><b>Order summary</b>${c.lines.map(({l,q})=>rw(esc(l.title)+" × "+q,usd(unit(l,q)*q))).join("")}${sum2(c)}<div id="er" class="er"></div><b style="display:block;margin-top:14px">Choose how to pay</b><button style="width:100%;margin-top:8px" id="pay" onclick="pay()">💳 Card / Apple Pay / Google Pay</button><button class="sec" style="width:100%;margin-top:8px" onclick="manual('A')">🌍 International transfer → MTN MoMo (USA, UK, Europe, Worldwide)</button><button class="sec" style="width:100%;margin-top:8px" onclick="manual('B')">📱 MTN MoMo direct (Uganda &amp; East Africa)</button>${S.cfg.usdt_address?`<button class="sec" style="width:100%;margin-top:8px" onclick="manual('C')">🪙 Pay with USDT</button>`:""}<button class="sec" style="width:100%;margin-top:8px" id="pcr" ${S.credit>=c.total&&c.total>0?"":"disabled"} onclick="payCredit()">💰 Credit Balance (${usd(S.credit)})</button><p class="mu">Have a gift card? Redeem it in My Account to add Credit Balance. Card payments need Stripe to be connected; transfers are confirmed by our team after you submit your receipt ID.</p></div>`;
+}
+function upgrade(){
+  if(!S.user)return login();
+  const mine=S.listings.filter(l=>l.seller_id===S.user.id),f=S.flags[S.user.id]||{};
+  $("#app").innerHTML=`<h2>🚀 Upgrade / Boost</h2><div class="panel"><b>Starter — Free</b><div class="mu">Up to 2 listings. You’re using ${mine.length} of 2.</div></div><div class="panel" style="border-color:var(--pr)"><b>Sokoni Pro — $4.99/month</b><div class="mu">Unlimited listings, ⭐ Pro Seller badge and priority placement.</div>${f.pro?`<div class="tag" style="margin-top:8px">✔ You’re Pro${f.pro_until?" until "+new Date(f.pro_until).toLocaleDateString("en-US"):""}</div>`:""}<button style="margin-top:8px" onclick="openPay('pro',{amount:4.99})">${f.pro?"Renew 30 days":"Upgrade to Pro"}</button></div><div class="panel"><b>🔥 First-Seen Top Boost — $1.99</b><div class="mu">Pins one item to the top of Home for 7 days. Pick an item:</div>${mine.map(l=>`<button class="sec" style="margin:6px 6px 0 0" onclick="openPay('boost',{amount:1.99,listing:'${l.id}'})">${esc(l.title.slice(0,22))}</button>`).join("")||`<p class="mu">Post an item first.</p>`}${S.freeBoosts?`<div class="mu" style="margin-top:10px">You have ${S.freeBoosts} free boost${S.freeBoosts>1?"s":""}. Use one on:</div>${mine.map(l=>`<button class="sec" style="margin:4px 4px 0 0" onclick="useBoost('${l.id}')">${esc(l.title.slice(0,22))}</button>`).join("")}`:""}</div>`;
+}
+window._gift=a=>openPay("gift",{amount:a,gift:a});
+
+var _st=settings;settings=async function(){await _st();if(!S.user||location.hash!=="#settings")return;let p=[];try{p=(await sb.from("payments").select("*").order("created_at",{ascending:false}).limit(6)).data||[]}catch(e){}
+  if(p.length)$("#app").insertAdjacentHTML("beforeend",`<div class="panel"><b>🧾 My payments</b>${p.map(x=>`<div class="msg"><b>${usd(x.amount)}</b> · ${esc(x.kind)} · <span class="tag">${esc(x.status)}</span>${x.gift_code?`<div>Gift code: <b>${esc(x.gift_code)}</b> ${cpBtn(x.gift_code)}</div>`:""}<div class="mu">Ref ${esc(x.txn_id)}</div></div>`).join("")}</div>`)};
+async function admin(){
+  if(!S.isAdmin)return $("#app").innerHTML=`<div class="empty">Admin only.</div>`;
+  const q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const [o,w,pay,inc,gc,pf]=await Promise.all([q(sb.from("orders").select("id,title,qty,commission,status")),q(sb.from("withdrawals").select("*").order("created_at",{ascending:false})),q(sb.from("payments").select("*").order("created_at",{ascending:false}).limit(40)),q(sb.from("platform_income").select("*")),q(sb.from("gift_cards").select("*").order("created_at",{ascending:false}).limit(8)),q(sb.from("profiles").select("id,name"))]);
+  const nm=Object.fromEntries(pf.map(p=>[p.id,p.name])),who=id=>esc(nm[id]||String(id).slice(0,8)),C=S.cfg;
+  const comm=o.filter(x=>x.status!=="Pending payment").reduce((a,x)=>a+Number(x.commission),0),extra=inc.reduce((a,i)=>a+Number(i.amount),0),sb_=inc.filter(i=>["Pro","Boost"].includes(i.kind)).reduce((a,i)=>a+Number(i.amount),0);
+  const pp=pay.filter(x=>x.status==="Pending"),pw=w.filter(x=>x.status==="Pending"),sellers=[...new Map(S.listings.map(l=>[l.seller_id,l.seller_name])).entries()];
+  const label=p=>p.kind==="order"?"Order: "+(p.order_ids||[]).map(id=>{const x=o.find(z=>z.id===id);return x?x.title+" ×"+x.qty:""}).join(", "):{pro:"Sokoni Pro",boost:"Boost",gift:"Gift card $"+p.gift_amount}[p.kind];
+  $("#app").innerHTML=`<h2>🛠️ Admin Dashboard</h2><div class="stats"><div class="panel"><div class="mu">Total USD Revenue</div><div class="price">${usd(comm+extra)}</div></div><div class="panel"><div class="mu">Sales commission (10%; 100% Official)</div><div class="price">${usd(comm)}</div></div><div class="panel"><div class="mu">Pro &amp; Boost earnings</div><div class="price">${usd(sb_)}</div></div><div class="panel"><div class="mu">Pending withdrawals</div><div class="price">${usd(pw.reduce((a,x)=>a+Number(x.amount),0))}</div></div></div><div class="panel"><b>⏳ Pending payments (${pp.length})</b>${pp.map(p=>`<div class="msg"><b>${usd(p.amount)}</b> · ${esc(label(p))}<div class="mu">From ${who(p.user_id)} · ${esc(p.method)}</div><div>Receipt ID: <b>${esc(p.txn_id)}</b></div><div class="row" style="margin-top:6px"><button onclick="admApprove('${p.id}')">Approve Payment</button><button class="dan" onclick="admReject('${p.id}')">Reject</button></div></div>`).join("")||`<p class="mu">Nothing waiting.</p>`}<p class="mu">Approve only after the money is in your MoMo / wallet.</p></div><div class="panel"><b>💸 Withdrawal requests</b>${w.map(x=>`<div class="msg"><b>${usd(x.amount)}</b> · ${who(x.user_id)} · ${esc(x.method)} · <span class="tag">${esc(x.status)}</span><div class="mu" style="white-space:pre-wrap">${esc(x.details)}</div>${x.status==="Pending"?`<button onclick="admPaid('${x.id}')">Mark as Paid</button>`:""}</div>`).join("")||`<p class="mu">No requests.</p>`}</div><div class="panel"><b>⚙️ Payment details shown to buyers</b><label>MoMo recipient name</label><input id="s_name" value="${esc(C.momo_name||"")}"><label>MTN MoMo number</label><input id="s_num" value="${esc(C.momo_number||"")}"><label>USD → UGX rate (optional)</label><input id="s_rate" type="number" value="${esc(C.ugx_rate||"")}"><label>USDT address (optional)</label><input id="s_usdt" value="${esc(C.usdt_address||"")}"><label>USDT network (e.g. TRC20)</label><input id="s_net" value="${esc(C.usdt_network||"")}"><button style="margin-top:10px" onclick="admSave()">Save</button></div><div class="panel"><b>Items</b>${S.listings.map(l=>`<div class="msg"><b>${esc(l.title)}</b> <span class="mu">· ${esc(l.seller_name)}</span><div class="row" style="margin-top:6px"><button class="${l.featured?"":"sec"}" onclick="admL('${l.id}',{featured:${!l.featured}})">🔥 Featured</button><button class="${l.official?"":"sec"}" onclick="admL('${l.id}',{official:${!l.official}})">🏬 Official Store</button><button class="${isBoost(l)?"":"sec"}" onclick="admL('${l.id}',{boosted_until:${isBoost(l)?"null":`'${new Date(Date.now()+7*864e5).toISOString()}'`}})">Boost 7d</button></div></div>`).join("")}</div><div class="panel"><b>Sellers</b>${sellers.map(([id,n])=>{const f=S.flags[id]||{};return `<div class="msg row" style="justify-content:space-between"><span>${esc(n)}</span><span><button class="${f.verified?"":"sec"}" onclick="admF('${id}','verified',${!f.verified})">✔ Verified</button> <button class="${f.pro?"":"sec"}" onclick="admF('${id}','pro',${!f.pro})">⭐ Pro</button></span></div>`}).join("")}</div><div class="panel"><b>Gift card codes</b><div class="row" style="margin:8px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="admGift(${a})">+ $${a}</button>`).join("")}</div>${gc.map(g=>`<div class="msg"><b>${esc(g.code)}</b> $${g.amount} ${g.redeemed_by?"· used":"· unused"}</div>`).join("")}</div>`;
+}
+async function admApprove(id){const {data,error}=await sb.rpc("approve_payment",{p_id:id});if(error)alert(error.message);else{if(data)alert("Approved. Gift card code: "+data);await loadListings();await loadFavs()}admin()}
+async function admReject(id){const {error}=await sb.rpc("reject_payment",{p_id:id});if(error)alert(error.message);admin()}
+async function admSave(){const r=[["momo_name","#s_name"],["momo_number","#s_num"],["ugx_rate","#s_rate"],["usdt_address","#s_usdt"],["usdt_network","#s_net"]].map(([key,id])=>({key,value:$(id).value.trim()}));const {error}=await sb.from("site_settings").upsert(r);if(error)return alert(error.message);toast("Saved ✓");await loadListings();admin()}
+
+/* ===== Sokoni v6: Owner / Admin Control Panel ===== */
+var _st2=settings;settings=async function(){await _st2();if(S.isAdmin&&S.user&&location.hash==="#settings")$("#app").insertAdjacentHTML("afterbegin",`<div class="panel" style="background:linear-gradient(135deg,#f5a623,#ff7a59);border:0"><button style="width:100%;font-size:18px;padding:14px;background:#1b2140;color:#fff" onclick="go('admin')">👑 Owner / Admin Control Panel</button></div>`)};
+async function admin(){
+  if(!S.isAdmin)return $("#app").innerHTML=`<div class="empty">Owner only.</div>`;
+  const q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const [o,w,pay,inc,gc,pf,pr]=await Promise.all([q(sb.from("orders").select("id,title,qty,commission,status")),q(sb.from("withdrawals").select("*").order("created_at",{ascending:false})),q(sb.from("payments").select("*").order("created_at",{ascending:false}).limit(100)),q(sb.from("platform_income").select("*")),q(sb.from("gift_cards").select("*").order("created_at",{ascending:false}).limit(10)),q(sb.from("profiles").select("id,name,banned")),q(sb.from("promos").select("*").order("code"))]);
+  const nm=Object.fromEntries(pf.map(p=>[p.id,p.name])),who=id=>esc(nm[id]||String(id).slice(0,8)),C=S.cfg||{};
+  const comm=o.filter(x=>x.status!=="Pending payment").reduce((a,x)=>a+Number(x.commission),0),extra=inc.reduce((a,i)=>a+Number(i.amount),0);
+  const pp=pay.filter(x=>x.status==="Pending"),pw=w.filter(x=>x.status==="Pending"),sellers=[...new Map(S.listings.map(l=>[l.seller_id,l.seller_name])).entries()];
+  const label=p=>p.kind==="order"?"Order: "+(p.order_ids||[]).map(id=>{const x=o.find(z=>z.id===id);return x?x.title+" ×"+x.qty:""}).join(", "):{pro:"Sokoni Pro",boost:"Boost",gift:"Gift card $"+p.gift_amount}[p.kind];
+  $("#app").innerHTML=`<h2>👑 Owner Control Panel</h2><div class="stats"><div class="panel"><div class="mu">Total Platform Revenue</div><div class="price">${usd(comm+extra)}</div></div><div class="panel"><div class="mu">Total Users</div><div class="price">${pf.length}</div></div><div class="panel"><div class="mu">Active Listings</div><div class="price">${S.listings.filter(l=>!l.sold).length}</div></div><div class="panel"><div class="mu">Waiting for you</div><div class="price" style="font-size:16px">${pp.length} payments · ${pw.length} withdrawals</div></div></div>
+<div class="panel"><b>⏳ Payments to approve (${pp.length})</b>${pp.map(p=>`<div class="msg"><b>${usd(p.amount)}</b> · ${esc(label(p))}<div class="mu">From ${who(p.user_id)} · ${esc(p.method)}</div><div>Receipt ID: <b>${esc(p.txn_id)}</b></div><div class="row" style="margin-top:6px"><button onclick="admApprove('${p.id}')">✅ Approve</button><button class="dan" onclick="admReject('${p.id}')">❌ Reject</button></div></div>`).join("")||`<p class="mu">Nothing waiting.</p>`}<p class="mu">Approve only after the money has reached your MoMo, wallet or crypto address.</p></div>
+<div class="panel"><b>🧾 All payments</b>${pay.filter(x=>x.status!=="Pending").slice(0,15).map(p=>`<div class="msg mu">${usd(p.amount)} · ${esc(label(p))} · ${who(p.user_id)} · <b>${esc(p.status)}</b></div>`).join("")||`<p class="mu">None yet.</p>`}</div>
+<div class="panel"><b>💸 Withdrawal requests</b>${w.map(x=>`<div class="msg"><b>${usd(x.amount)}</b> · ${who(x.user_id)} · ${esc(x.method)} · <span class="tag">${esc(x.status)}</span><div class="mu" style="white-space:pre-wrap">${esc(x.details)}</div>${x.status==="Pending"?`<button onclick="admPaid('${x.id}')">💸 Mark as Paid</button>`:""}</div>`).join("")||`<p class="mu">No requests.</p>`}</div>
+<div class="panel"><b>📦 Listings</b>${S.listings.map(l=>`<div class="msg"><b>${esc(l.title)}</b> <span class="mu">· ${esc(l.seller_name)} · ${usd(l.price)}</span><div class="row" style="margin-top:6px"><button class="${l.featured?"":"sec"}" onclick="admL('${l.id}',{featured:${!l.featured}})">📌 ${l.featured?"Unpin":"Pin"} Featured</button><button class="${isBoost(l)?"":"sec"}" onclick="admL('${l.id}',{boosted_until:${isBoost(l)?"null":`'${new Date(Date.now()+7*864e5).toISOString()}'`}})">🔥 First Seen 7d</button><button class="${l.official?"":"sec"}" onclick="admL('${l.id}',{official:${!l.official}})">🏬 Official</button><button class="dan" onclick="admDel('${l.id}')">🗑 Delete</button></div></div>`).join("")||`<p class="mu">No listings.</p>`}</div>
+<div class="panel"><b>👥 Users</b>${pf.map(p=>`<div class="msg row" style="justify-content:space-between"><span>${esc(p.name||String(p.id).slice(0,8))}${p.banned?` <span class="tag" style="background:#ffe9e5;color:#d6401f">Banned</span>`:""}</span>${p.id===S.user.id?"":`<button class="${p.banned?"":"dan"}" onclick="admBan('${p.id}',${!p.banned})">${p.banned?"Unban":"Ban"}</button>`}</div>`).join("")}</div>
+<div class="panel"><b>🎁 Gift card codes</b><div class="row" style="margin:8px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="admGift(${a})">+ $${a}</button>`).join("")}</div>${gc.map(g=>`<div class="msg"><b>${esc(g.code)}</b> $${g.amount} ${g.redeemed_by?"· used":"· unused"}</div>`).join("")}</div>
+<div class="panel"><b>🎟️ Promo codes</b><div class="row" style="margin:8px 0"><input id="pcode" placeholder="Code (empty = random)" style="flex:1"><select id="ppct" style="width:90px">${[5,10,15,20,25,30].map(p=>`<option>${p}</option>`).join("")}</select><button onclick="admPromo()">Create</button></div>${pr.map(p=>`<div class="msg row" style="justify-content:space-between"><span><b>${esc(p.code)}</b> — ${p.percent}% ${p.active?"":"(off)"}</span><button class="sec" onclick="admPromoOn('${p.code}',${!p.active})">${p.active?"Turn off":"Turn on"}</button></div>`).join("")}</div>
+<div class="panel"><b>⚙️ Payment details shown to buyers</b><label>MoMo recipient name</label><input id="s_name" value="${esc(C.momo_name||"")}"><label>MTN MoMo number</label><input id="s_num" value="${esc(C.momo_number||"")}"><label>USD → UGX rate (optional)</label><input id="s_rate" type="number" value="${esc(C.ugx_rate||"")}"><label>USDT address (optional)</label><input id="s_usdt" value="${esc(C.usdt_address||"")}"><label>USDT network (e.g. TRC20)</label><input id="s_net" value="${esc(C.usdt_network||"")}"><button style="margin-top:10px" onclick="admSave()">Save</button></div>
+<div class="panel"><b>Sellers</b>${sellers.map(([id,n])=>{const f=S.flags[id]||{};return `<div class="msg row" style="justify-content:space-between"><span>${esc(n)}</span><span><button class="${f.verified?"":"sec"}" onclick="admF('${id}','verified',${!f.verified})">✔ Verified</button> <button class="${f.pro?"":"sec"}" onclick="admF('${id}','pro',${!f.pro})">⭐ Pro</button></span></div>`}).join("")}</div>`;
+}
+async function admDel(id){if(!confirm("Delete this listing for good?"))return;await admErr(sb.from("listings").delete().eq("id",id));await loadListings();admin()}
+async function admBan(id,b){if(b&&!confirm("Ban this user? They won't be able to post, buy or message."))return;await admErr(sb.from("profiles").update({banned:b}).eq("id",id));admin()}
+async function admPromo(){const code=($("#pcode").value.trim()||"SK"+Math.random().toString(36).slice(2,8)).toUpperCase();await admErr(sb.from("promos").insert({code,percent:parseInt($("#ppct").value)}));admin()}
+async function admPromoOn(code,v){await admErr(sb.from("promos").update({active:v}).eq("code",code));admin()}
+
+/* ===== Sokoni v7: forced Owner button, Owner modal (4 tabs), My Account button grid ===== */
+const OWNER="brightreachstudio7@gmail.com",isOwner=()=>!!S.user&&(S.isAdmin||String(S.user.email||"").toLowerCase()===OWNER);
+const closeP=()=>{document.querySelectorAll(".modal").forEach(m=>m.remove());if(S.pg){S.pg.bg.id="app";S.pg=null}};
+var _r7=render;render=function(){if(S.pg)closeP();_r7()};
+function openPage(fn){
+  closeP();const bg=document.getElementById("app");bg.id="app_bg";
+  const m=document.createElement("div");m.className="modal";m.style.cssText="padding:0;align-items:stretch;background:var(--bg)";
+  m.innerHTML=`<div class="panel" style="max-width:none;max-height:none;height:100%;border-radius:0;margin:0;overflow:auto;padding:12px"><button class="sec" onclick="closeP()">✕ Close</button><div id="app" style="margin-top:10px"></div></div>`;
+  document.body.appendChild(m);S.pg={bg};fn();
+}
+const ownErr=e=>alert(e.message+(/policy|permission|row-level|admin|owner/i.test(e.message)?"\n\nYour account must be marked as owner in the database. Run the owner SQL, then log out and back in.":""));
+function openOwner(tab){
+  closeP();tab=tab||"pay";
+  const T=[["pay","Payments"],["wd","Withdrawals"],["list","Listings"],["stats","Stats &amp; Codes"]];
+  const m=document.createElement("div");m.className="modal";m.style.cssText="padding:0;align-items:stretch;background:var(--bg)";
+  m.innerHTML=`<div class="panel" style="max-width:none;max-height:none;height:100%;border-radius:0;margin:0;overflow:auto;padding:14px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">👑 Owner Control Panel</h2><button class="sec" onclick="closeP()">✕ Close</button></div><div id="ostat" class="mu" style="margin-top:10px">Checking owner access…</div><div class="tabsx" style="margin-top:12px">${T.map(([k,n])=>`<button class="${k===tab?"on":""}" onclick="openOwner('${k}')">${n}</button>`).join("")}</div><div id="otab"><div class="mu">Loading…</div></div></div>`;
+  document.body.appendChild(m);ownTab(tab);ownDiag();
+}
+async function ownDiag(){
+  let h;
+  try{
+    const {data,error}=await sb.from("profiles").select("id,is_admin").eq("id",S.user.id).maybeSingle();
+    if(error)h=`<div class="panel" style="background:#ffe9e5;color:#8a2a12">❌ Database error: ${esc(error.message)}<br>The database setup hasn’t fully run yet.</div>`;
+    else if(!data)h=`<div class="panel" style="background:#fff3d6;color:#7a5a00">⚠️ No profile row found for ${esc(S.user.email)}. Log out and back in once, then run the owner SQL.</div>`;
+    else if(!data.is_admin)h=`<div class="panel" style="background:#fff3d6;color:#7a5a00">⚠️ Your profile exists but is not marked owner. Run the owner SQL, then log out and back in.</div>`;
+    else{S.isAdmin=true;h=`<div class="panel" style="background:#dff7ea;color:#0d6b49">✔ Owner access confirmed</div>`}
+  }catch(e){h=`<div class="panel" style="background:#ffe9e5;color:#8a2a12">❌ ${esc(e.message)}</div>`}
+  const e=document.getElementById("ostat");if(e)e.innerHTML=h;
+}
+async function ownTab(tab){
+  const q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const pf=await q(sb.from("profiles").select("id,name")),nm=Object.fromEntries(pf.map(p=>[p.id,p.name])),who=id=>esc(nm[id]||String(id).slice(0,8));
+  let h="";
+  if(tab==="pay"){
+    const [pay,o]=await Promise.all([q(sb.from("payments").select("*").eq("status","Pending").order("created_at",{ascending:false})),q(sb.from("orders").select("id,title,qty"))]);
+    const label=p=>p.kind==="order"?"Order: "+(p.order_ids||[]).map(id=>{const x=o.find(z=>z.id===id);return x?x.title+" ×"+x.qty:""}).join(", "):{pro:"Sokoni Pro",boost:"Boost",gift:"Gift card $"+p.gift_amount}[p.kind];
+    h=`<b>Pending payments (${pay.length})</b>`+(pay.map(p=>`<div class="panel" style="margin-top:10px"><b>${usd(p.amount)}</b> · ${esc(label(p))}<div class="mu">From ${who(p.user_id)} · ${esc(p.method)}</div><div>Receipt ID: <b>${esc(p.txn_id)}</b></div><div class="row" style="margin-top:8px"><button onclick="ownApprove('${p.id}')">✅ Approve</button><button class="dan" onclick="ownReject('${p.id}')">❌ Reject</button></div></div>`).join("")||`<p class="mu">Nothing waiting.</p>`)+`<p class="mu">Approve only after the money has reached your MoMo, wallet or crypto address. Approving unlocks the buyer’s Pro plan, Boost, gift card or book.</p>`;
+  }else if(tab==="wd"){
+    const w=await q(sb.from("withdrawals").select("*").order("created_at",{ascending:false}));
+    h=`<b>Withdrawal requests (${w.length})</b>`+(w.map(x=>`<div class="panel" style="margin-top:10px"><b>${usd(x.amount)}</b> · ${who(x.user_id)} · <span class="tag">${esc(x.status)}</span><div class="mu">${esc(x.method)}</div><div class="mu" style="white-space:pre-wrap">${esc(x.details)}</div>${x.status==="Pending"?`<button style="margin-top:8px" onclick="ownPaid('${x.id}')">💸 Mark Paid</button>`:""}</div>`).join("")||`<p class="mu">No requests.</p>`);
+  }else if(tab==="list"){
+    h=`<b>All listings (${S.listings.length})</b>`+(S.listings.map(l=>`<div class="panel" style="margin-top:10px"><b>${esc(l.title)}</b><div class="mu">${esc(l.seller_name)} · ${usd(l.price)}</div><div class="row" style="margin-top:8px"><button class="${isBoost(l)?"":"sec"}" onclick="ownL('${l.id}',{boosted_until:${isBoost(l)?"null":`'${new Date(Date.now()+7*864e5).toISOString()}'`}})">🔥 ${isBoost(l)?"Unpin":"Pin"} First-Seen</button><button class="dan" onclick="ownDel('${l.id}')">🗑️ Delete</button></div></div>`).join("")||`<p class="mu">No listings.</p>`);
+  }else{
+    const [o,inc,gc]=await Promise.all([q(sb.from("orders").select("commission,status")),q(sb.from("platform_income").select("amount")),q(sb.from("gift_cards").select("*").order("created_at",{ascending:false}).limit(10))]);
+    const rev=o.filter(x=>x.status!=="Pending payment").reduce((a,x)=>a+Number(x.commission),0)+inc.reduce((a,i)=>a+Number(i.amount),0);
+    h=`<div class="stats"><div class="panel"><div class="mu">Total USD revenue</div><div class="price">${usd(rev)}</div></div><div class="panel"><div class="mu">Total users</div><div class="price">${pf.length}</div></div></div><div class="panel"><b>Create a Gift Card code</b><div class="row" style="margin:8px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="ownGift(${a})">+ $${a}</button>`).join("")}</div>${gc.map(g=>`<div class="msg"><b>${esc(g.code)}</b> $${g.amount} ${g.redeemed_by?"· used":"· unused"} ${g.redeemed_by?"":cpBtn(g.code)}</div>`).join("")}</div>`;
+  }
+  const e=document.getElementById("otab");if(e)e.innerHTML=h;
+}
+async function ownApprove(id){const {data,error}=await sb.rpc("approve_payment",{p_id:id});if(error)return ownErr(error);if(data)alert("Approved. Gift card code: "+data);await loadListings();await loadFavs();openOwner("pay")}
+async function ownReject(id){const {error}=await sb.rpc("reject_payment",{p_id:id});if(error)return ownErr(error);openOwner("pay")}
+async function ownPaid(id){const {error}=await sb.from("withdrawals").update({status:"Paid",paid_at:new Date().toISOString()}).eq("id",id);if(error)return ownErr(error);openOwner("wd")}
+async function ownL(id,p){const {error}=await sb.from("listings").update(p).eq("id",id);if(error)return ownErr(error);await loadListings();openOwner("list")}
+async function ownDel(id){if(!confirm("Delete this listing for good?"))return;const {error}=await sb.from("listings").delete().eq("id",id);if(error)return ownErr(error);await loadListings();openOwner("list")}
+async function ownGift(a){const code=("SK"+Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,6)).toUpperCase();const {error}=await sb.from("gift_cards").insert({code,amount:a});if(error)return ownErr(error);alert("New $"+a+" gift card code:\n"+code);openOwner("stats")}
+async function openSpin(){
+  closeP();const q=async t=>{try{return (await t).data||[]}catch(e){return[]}},H=864e5;
+  const [ck,sp]=await Promise.all([q(sb.from("rewards_log").select("*").eq("kind","checkin").order("created_at",{ascending:false}).limit(1)),q(sb.from("rewards_log").select("*").eq("kind","spin").order("created_at",{ascending:false}).limit(1))]);
+  const lc=ck[0],streak=lc&&Date.now()-new Date(lc.created_at)<2*H?Number(lc.prize)||0:0,canC=!lc||Date.now()-new Date(lc.created_at)>=H,canS=!sp[0]||Date.now()-new Date(sp[0].created_at)>=H;
+  modal(`<h2>🎰 Daily Rewards &amp; Spin</h2><div class="row" style="margin:10px 0">${[1,2,3,4,5,6,7].map(k=>`<span class="tag" style="${k<=streak?"background:var(--pr);color:#fff":""}">Day ${k}</span>`).join("")}</div><button ${canC?"":"disabled"} onclick="checkin2()">${canC?"Check In Today":"Checked in ✔"}</button><div id="wh" style="width:130px;height:130px;border-radius:50%;margin:14px auto 4px;border:4px solid var(--pr);background:conic-gradient(#ff7a59 0 20%,#4f6bff 0 40%,#17a673 0 60%,#f5a623 0 80%,#ff4d6d 0 100%);transition:transform 2.5s cubic-bezier(.2,.8,.2,1)"></div><div style="text-align:center">▲</div><button id="spb" style="width:100%" ${canS?"":"disabled"} onclick="spin2()">${canS?"Spin to Win (1 free spin today)":"Next free spin tomorrow"}</button><p class="mu">Prizes: $0.50 or $1.00 credit, 10% or 15% coupons, or a Free Boost.</p><button class="sec" onclick="closeP()">Close</button>`);
+}
+async function checkin2(){const {data,error}=await sb.rpc("daily_checkin");if(error)return alert(error.message);toast("Day "+data.streak+": +"+usd(data.amount));await loadFavs();openSpin()}
+async function spin2(){
+  const b=$("#spb");b.disabled=true;const {data,error}=await sb.rpc("spin");if(error){b.disabled=false;return alert(error.message)}
+  $("#wh").style.transform=`rotate(${1800+Math.random()*360}deg)`;
+  setTimeout(async()=>{alert("🎉 You won: "+data.prize+(data.code?"\nYour code: "+data.code:""));await loadFavs();openSpin()},2700);
+}
+async function openGift(){
+  closeP();let p=[];try{p=(await sb.from("payments").select("*").eq("kind","gift").order("created_at",{ascending:false}).limit(6)).data||[]}catch(e){}
+  modal(`<h2>🎁 Gift Cards</h2><p class="mu">Buy a card, or redeem a code to add Credit Balance.</p><div class="row" style="margin:10px 0">${[10,25,50,100].map(a=>`<button class="sec" onclick="_gift(${a})">$${a}</button>`).join("")}</div><div class="row"><input id="gc" placeholder="Enter gift card code" style="flex:1"><button onclick="redeem()">Redeem</button></div>${p.length?`<b style="display:block;margin-top:14px">My gift card purchases</b>`+p.map(x=>`<div class="msg"><b>${usd(x.amount)}</b> · <span class="tag">${esc(x.status)}</span>${x.gift_code?`<div>Code: <b>${esc(x.gift_code)}</b> ${cpBtn(x.gift_code)}</div>`:""}</div>`).join(""):""}<button class="sec" style="margin-top:14px" onclick="closeP()">Close</button>`);
+}
+async function getAvail(){
+  const me=S.user.id,q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const [oo,wd]=await Promise.all([q(sb.from("orders").select("seller_payout,seller_id,status")),q(sb.from("withdrawals").select("*").order("created_at",{ascending:false}))]);
+  const earned=oo.filter(o=>o.seller_id===me&&o.status==="Delivered").reduce((a,o)=>a+Number(o.seller_payout),0),mine=wd.filter(w=>w.user_id===me),taken=mine.filter(w=>w.status!=="Rejected").reduce((a,w)=>a+Number(w.amount),0);
+  return {avail:Math.max(0,earned-taken),wd:mine};
+}
+async function withdrawNow(){const {avail}=await getAvail();openWithdraw(avail)}
+async function openPayout(){
+  closeP();const {avail,wd}=await getAvail();
+  modal(`<h2>💳 Card &amp; Payout</h2><p class="mu"><b>Paying by card:</b> pick card, Apple Pay or Google Pay at checkout. Sokoni never stores your card details.</p><p><b>Seller earnings available:</b> ${usd(avail)}</p><button onclick="withdrawNow()">Withdraw Funds</button>${wd.length?`<b style="display:block;margin-top:14px">Your withdrawals</b>`+wd.slice(0,6).map(w=>`<div class="msg">${usd(w.amount)} · ${esc(w.method)} · <b>${esc(w.status)}</b></div>`).join(""):""}<button class="sec" style="margin-top:14px" onclick="closeP()">Close</button>`);
+}
+async function openCoupons(){
+  closeP();const q=async t=>{try{return (await t).data||[]}catch(e){return[]}};
+  const [cp,uc]=await Promise.all([q(sb.from("promos").select("code,percent").eq("active",true)),q(sb.from("user_coupons").select("code,percent").eq("used",false))]);
+  let hist=[];try{hist=JSON.parse(localStorage.getItem("sokoni-hist")||"[]").map(id=>S.listings.find(l=>l.id===id)).filter(Boolean).slice(0,10)}catch(e){}
+  modal(`<h2>🎟️ Coupons &amp; History</h2>${[...cp,...uc].map(c=>`<div class="msg"><b>${esc(c.code)}</b> — ${c.percent}% off. Enter it in your cart.</div>`).join("")||`<p class="mu">No coupons right now.</p>`}<b style="display:block;margin-top:14px">🕘 Browsing History</b>${hist.length?`<div class="snap" style="margin-top:10px">${hist.map(l=>`<div class="card" style="flex:0 0 110px;padding:0" onclick="closeP();go('item-${l.id}')"><div class="img sq" ${imgStyle(l.image_url)}></div><div class="price" style="font-size:13px;padding:4px 6px">${usd(l.price)}</div></div>`).join("")}</div>`:`<p class="mu">Items you view will show up here.</p>`}<button class="sec" style="margin-top:14px" onclick="closeP()">Close</button>`);
+}
+async function openAccount(){
+  closeP();const ad=await getAddrs(),th=document.documentElement.dataset.theme||"auto";
+  modal(`<h2>⚙️ Account</h2><p class="mu">${esc(S.user.email)}</p><label>Display name</label><input id="sn" maxlength="40" value="${esc(uname())}"><div id="sm" class="mu"></div><button style="margin-top:8px" onclick="saveName()">Save name</button><b style="display:block;margin-top:14px">📍 Saved addresses <button class="sec" style="padding:4px 10px" onclick="addAddr2()">＋ Add</button></b>${ad.map((a,i)=>`<div class="msg row" style="justify-content:space-between"><span style="white-space:pre-wrap">${esc(a)}</span><button class="dan" onclick="delAddr2(${i})">✕</button></div>`).join("")||`<p class="mu">No saved addresses.</p>`}<label>Theme</label><select onchange="setTheme(this.value)">${["auto","light","dark"].map(t=>`<option value="${t}" ${th===t?"selected":""}>${t[0].toUpperCase()+t.slice(1)}</option>`).join("")}</select><div class="row" style="margin-top:14px"><button class="sec" onclick="closeP();go('support')">🎧 Help</button><button class="sec" onclick="sb.auth.signOut();closeP();go('')">Log out</button><button class="sec" onclick="closeP()">Close</button></div>`);
+}
+function addAddr2(){const m=modal(`<h2>Add address</h2><textarea id="aa" rows="3" placeholder="Full name, street, city, country"></textarea><div class="row" style="margin-top:12px"><button id="ok">Save</button><button class="sec" onclick="openAccount()">Cancel</button></div>`);m.querySelector("#ok").onclick=async()=>{const t=m.querySelector("#aa").value.trim();if(t.length<10)return;const a=await getAddrs();a.push(t);await saveAddrs(a);openAccount()}}
+async function delAddr2(i){const a=await getAddrs();a.splice(i,1);await saveAddrs(a);openAccount()}
+settings=async function(){
+  if(!S.user){$("#app").innerHTML=`<h2>⚙️ Settings</h2><div class="panel"><p class="mu">You’re not logged in.</p><button onclick="openAuth(false)">Log in</button> <button class="sec" onclick="openAuth(true)">Sign up</button></div>`;return}
+  $("#app").innerHTML=`${isOwner()?`<button style="width:100%;font-size:20px;padding:18px;border-radius:16px;background:linear-gradient(135deg,#f5a623,#ffcc4d);color:#1b2140;font-weight:800;box-shadow:0 6px 16px rgba(245,166,35,.45);margin-bottom:14px" onclick="openOwner('pay')">👑 OWNER CONTROL PANEL</button>`:""}<h2 style="margin-top:0">👤 My Account</h2><div class="panel row"><div style="width:52px;height:52px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800">${esc(uname()[0].toUpperCase())}</div><div><b>${esc(uname())}</b><div class="mu">${esc(S.user.email)}</div></div></div><div class="panel"><div class="row" style="justify-content:space-between"><div><div class="mu">Credit Balance</div><div class="price" style="font-size:26px">${usd(S.credit)}</div></div><button onclick="withdrawNow()">Withdraw Funds</button></div></div><div class="stats">${[["🎰","Daily Spin","openSpin()"],["💳","Connect Card / Payout","openPayout()"],["🎁","Gift Cards","openGift()"],["📦","Orders","openPage(ordersPage)"],["🏷️","My Listings","openPage(dash)"],["👑","Seller Plan","openPage(upgrade)"],["🎟️","Coupons &amp; History","openCoupons()"],["⚙️","Account &amp; Help","openAccount()"]].map(([i,t,f])=>`<button class="sec" style="padding:18px 8px;font-size:15px" onclick="${f}"><div style="font-size:28px">${i}</div>${t}</button>`).join("")}</div>`;
+};
+
+init();
+
+addEventListener("hashchange",render);
+</script></body></html>
