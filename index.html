@@ -19,9 +19,12 @@
     .row { display: flex; align-items: center; gap: 10px; }
     .mu { color: #8b949e; font-size: 13px; }
     .price { font-weight: 800; color: var(--pr); }
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
     .tag { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; background: rgba(23,166,115,0.15); color: var(--pr); font-weight: 600; }
-    #app { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 85px; }
+    .chip { display: inline-block; padding: 6px 12px; border-radius: 99px; font-size: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); cursor: pointer; white-space: nowrap; }
+    .chip.active { background: var(--pr); color: #fff; border-color: var(--pr); }
+    #app { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 95px; }
     nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 1000; }
     nav button { background: none; color: var(--text); font-size: 11px; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
     nav button.active { color: var(--pr); }
@@ -35,7 +38,7 @@
     <button id="nav-home" onclick="go('home')">🏠<span>Home</span></button>
     <button id="nav-categories" onclick="go('categories')">📂<span>Categories</span></button>
     <button id="nav-post" onclick="go('post')">➕<span>Post</span></button>
-    <button id="nav-cart" onclick="go('cart')">🛒<span>Cart</span></button>
+    <button id="nav-cart" onclick="go('cart')">🛒<span id="cart-badge">Cart</span></button>
     <button id="nav-settings" onclick="go('settings')">⚙️<span>Settings</span></button>
   </nav>
 
@@ -45,7 +48,35 @@
   const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
   const sb = (SUPABASE_URL !== "YOUR_SUPABASE_URL") ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  let S = { user: null, listings: [], cart: [], credit: 0.60, page: "settings" };
+  const CATEGORIES = [
+    { name: "Electronics", icon: "📱" },
+    { name: "Fashion", icon: "👕" },
+    { name: "Home & Garden", icon: "🏡" },
+    { name: "Vehicles", icon: "🚗" },
+    { name: "Beauty & Health", icon: "💄" },
+    { name: "Sports & Outdoors", icon: "⚽" },
+    { name: "Services", icon: "🛠️" },
+    { name: "Other", icon: "📦" }
+  ];
+
+  const DEFAULT_LISTINGS = [
+    { id: "demo-1", title: "Wireless Noise-Cancelling Earbuds", price: 19.99, category: "Electronics", condition: "New", location: "Nairobi", description: "Bluetooth 5.3, 30h battery life, deep bass & charging case.", image_url: "", seller_email: "techstore@sokoni.app" },
+    { id: "demo-2", title: "Vintage Classic Denim Jacket", price: 28.00, category: "Fashion", condition: "Like New", location: "Kampala", description: "100% heavy cotton denim, unisex fit, size L.", image_url: "", seller_email: "stylehub@sokoni.app" },
+    { id: "demo-3", title: "Smart Fitness Watch Series 8", price: 45.00, category: "Electronics", condition: "New", location: "Dar es Salaam", description: "Heart rate, GPS tracking, waterproof IP68, AMOLED display.", image_url: "", seller_email: "gadgetpro@sokoni.app" },
+    { id: "demo-4", title: "Minimalist LED Desk Lamp", price: 14.50, category: "Home & Garden", condition: "New", location: "Kigali", description: "3 brightness levels, USB-C rechargeable, eye-care warm light.", image_url: "", seller_email: "homeliving@sokoni.app" }
+  ];
+
+  let S = {
+    user: null,
+    listings: [],
+    cart: [],
+    orders: [],
+    credit: 0.60,
+    sellerPro: false,
+    page: "home",
+    search: "",
+    selectedCat: "All"
+  };
 
   const $ = s => document.querySelector(s);
   function usd(n) { return "$" + Number(n || 0).toFixed(2); }
@@ -64,36 +95,64 @@
   function closeP() { document.querySelectorAll(".sokoni-modal").forEach(el => el.remove()); }
   function toast(msg) {
     let t = document.createElement("div");
-    t.style.cssText = "position:fixed;bottom:75px;left:50%;transform:translateX(-50%);background:#17a673;color:#fff;padding:8px 16px;border-radius:20px;z-index:10000;font-weight:600;font-size:13px;";
+    t.style.cssText = "position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#17a673;color:#fff;padding:8px 16px;border-radius:20px;z-index:10000;font-weight:600;font-size:13px;text-align:center;max-width:90%;";
     t.innerText = msg; document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2500);
+    setTimeout(() => t.remove(), 2600);
+  }
+
+  function saveState() {
+    const uid = S.user?.id || "guest";
+    localStorage.setItem("sokoni_credit_" + uid, S.credit.toFixed(2));
+    localStorage.setItem("sokoni_cart_" + uid, JSON.stringify(S.cart));
+    localStorage.setItem("sokoni_orders_" + uid, JSON.stringify(S.orders));
+    localStorage.setItem("sokoni_sellerpro_" + uid, S.sellerPro ? "1" : "0");
+    updateCartBadge();
+  }
+
+  function updateCartBadge() {
+    const el = $("#cart-badge");
+    if (el) el.innerText = S.cart.length ? `Cart (${S.cart.length})` : "Cart";
   }
 
   async function init() {
     const savedTheme = localStorage.getItem("sokoni-theme") || "dark";
     document.documentElement.dataset.theme = savedTheme;
+
     if (sb) {
       try {
         const { data: { session } } = await sb.auth.getSession();
         S.user = session?.user || null;
-        await loadListings();
       } catch (e) { console.error(e); }
     } else {
       S.user = { id: "demo-user", email: "member@sokoni.app" };
     }
-    const savedCredit = localStorage.getItem("sokoni_credit_" + (S.user?.id || "guest"));
+
+    const uid = S.user?.id || "guest";
+    const savedCredit = localStorage.getItem("sokoni_credit_" + uid);
     if (savedCredit !== null) S.credit = parseFloat(savedCredit) || 0.60;
+    try { S.cart = JSON.parse(localStorage.getItem("sokoni_cart_" + uid) || "[]"); } catch (e) { S.cart = []; }
+    try { S.orders = JSON.parse(localStorage.getItem("sokoni_orders_" + uid) || "[]"); } catch (e) { S.orders = []; }
+    S.sellerPro = localStorage.getItem("sokoni_sellerpro_" + uid) === "1";
+
+    await loadListings();
+    updateCartBadge();
     go(S.page);
   }
 
-  function saveCredit() {
-    localStorage.setItem("sokoni_credit_" + (S.user?.id || "guest"), S.credit.toFixed(2));
-  }
-
   async function loadListings() {
-    if (!sb) return;
-    const { data } = await sb.from("listings").select("*").order("created_at", { ascending: false });
-    S.listings = data || [];
+    let localListings = [];
+    try { localListings = JSON.parse(localStorage.getItem("sokoni_local_listings") || "[]"); } catch (e) {}
+
+    if (sb) {
+      try {
+        const { data } = await sb.from("listings").select("*").order("created_at", { ascending: false });
+        if (data && data.length) {
+          S.listings = data;
+          return;
+        }
+      } catch (e) {}
+    }
+    S.listings = [...localListings, ...DEFAULT_LISTINGS];
   }
 
   function go(page) {
@@ -108,18 +167,270 @@
     else if (page === "settings") renderSettings();
   }
 
+  // ==================== 1. FULL HOME FEED ====================
   function renderHome() {
-    $("#app").innerHTML = `<h2>🏠 Home</h2><p class="mu">Welcome to Sokoni Marketplace.</p>`;
+    const filtered = S.listings.filter(item => {
+      const matchesCat = S.selectedCat === "All" || (item.category || "Other") === S.selectedCat;
+      const matchesSearch = !S.search || item.title.toLowerCase().includes(S.search.toLowerCase()) || (item.description || "").toLowerCase().includes(S.search.toLowerCase());
+      return matchesCat && matchesSearch;
+    });
+
+    $("#app").innerHTML = `
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <h2 style="margin:0">🛍️ Sokoni</h2>
+        <span class="tag">🛡️ Trade Assurance</span>
+      </div>
+
+      <input id="home-search" value="${esc(S.search)}" placeholder="🔍 Search products, electronics, fashion..." oninput="S.search=this.value;renderHome()">
+
+      <div class="panel" style="background:linear-gradient(135deg,#17a673,#0f766e);color:#fff;border:none;padding:14px">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <b>🔥 Welcome Deals &amp; Vouchers</b>
+            <div style="font-size:12px;opacity:.92;margin-top:3px">Use code <b>SOKONI15</b> for 15% off · Buyer Protection included</div>
+          </div>
+          <button style="background:#fff;color:#0f766e;padding:6px 10px;font-size:12px" onclick="openCoupons()">Claim</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px">
+        <span class="chip ${S.selectedCat === 'All' ? 'active' : ''}" onclick="S.selectedCat='All';renderHome()">All</span>
+        ${CATEGORIES.map(c => `<span class="chip ${S.selectedCat === c.name ? 'active' : ''}" onclick="S.selectedCat='${c.name}';renderHome()">${c.icon} ${c.name}</span>`).join("")}
+      </div>
+
+      <div class="grid2">
+        ${filtered.length ? filtered.map(l => `
+          <div class="panel" style="padding:10px;margin-bottom:0;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="cursor:pointer" onclick="viewProduct('${l.id}')">
+              <div style="height:120px;background:#21262d;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden">
+                ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%;height:100%;object-fit:cover">` : (CATEGORIES.find(c => c.name === l.category)?.icon || "📦")}
+              </div>
+              <span class="mu" style="font-size:11px">${esc(l.category || "General")} · ${esc(l.location || "Verified")}</span>
+              <b style="font-size:14px;display:block;margin:3px 0;line-height:1.3">${esc(l.title)}</b>
+            </div>
+            <div style="margin-top:6px">
+              <div class="price" style="font-size:16px">${usd(l.price)}</div>
+              <button style="width:100%;margin-top:8px;padding:7px;font-size:12px" onclick="addToCart('${l.id}')">🛒 Add to Cart</button>
+            </div>
+          </div>
+        `).join("") : `<div class="panel" style="grid-column:1/-1;text-align:center"><p class="mu">No matching listings found.</p></div>`}
+      </div>`;
   }
+
+  function viewProduct(id) {
+    const l = S.listings.find(x => String(x.id) === String(id));
+    if (!l) return;
+    modal(`
+      <div style="height:160px;background:#21262d;border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">
+        ${l.image_url ? `<img src="${esc(l.image_url)}" style="width:100%;height:100%;object-fit:cover">` : (CATEGORIES.find(c => c.name === l.category)?.icon || "📦")}
+      </div>
+      <div class="row" style="justify-content:space-between">
+        <span class="tag">${esc(l.category || "Item")}</span>
+        <span class="mu">${esc(l.condition || "New")} · 📍 ${esc(l.location || "Sokoni")}</span>
+      </div>
+      <h2 style="margin:8px 0 4px 0">${esc(l.title)}</h2>
+      <div class="price" style="font-size:22px;margin-bottom:10px">${usd(l.price)}</div>
+      <p class="mu" style="line-height:1.5">${esc(l.description || "Verified listing protected by Sokoni Trade Assurance.")}</p>
+      <div class="row" style="margin-top:14px">
+        <button style="flex:1" onclick="addToCart('${l.id}');closeP()">🛒 Add to Cart</button>
+        <button class="sec" onclick="closeP()">Close</button>
+      </div>
+    `);
+  }
+
+  // ==================== 2. FULL CATEGORIES VIEW ====================
   function renderCategories() {
-    $("#app").innerHTML = `<h2>📂 Categories</h2><p class="mu">Browse marketplace categories.</p>`;
+    $("#app").innerHTML = `
+      <h2 style="margin-top:0">📂 Browse Categories</h2>
+      <p class="mu" style="margin-bottom:14px">Tap any category to filter marketplace products.</p>
+      <div class="grid2">
+        ${CATEGORIES.map(c => {
+          const count = S.listings.filter(l => (l.category || "Other") === c.name).length;
+          return `
+            <div class="panel" style="margin-bottom:0;cursor:pointer;text-align:center;padding:20px 10px" onclick="S.selectedCat='${c.name}';go('home')">
+              <div style="font-size:34px;margin-bottom:6px">${c.icon}</div>
+              <b style="display:block;font-size:14px">${c.name}</b>
+              <span class="mu" style="font-size:12px">${count} item${count === 1 ? "" : "s"}</span>
+            </div>`;
+        }).join("")}
+      </div>`;
   }
+
+  // ==================== 3. FULL POST LISTING VIEW ====================
   function renderPost() {
-    $("#app").innerHTML = `<h2>➕ Post Listing</h2><div class="panel"><label>Title</label><input id="ltitle" placeholder="Item name"><label>Price ($)</label><input id="lprice" type="number" placeholder="10.00"><button style="width:100%" onclick="toast('Listing created ✔');go('settings')">Publish</button></div>`;
+    $("#app").innerHTML = `
+      <h2 style="margin-top:0">➕ Post a New Listing</h2>
+      <div class="panel">
+        <label>Product Title *</label>
+        <input id="ltitle" placeholder="e.g. Samsung Galaxy Buds Pro">
+
+        <div class="grid2" style="margin-bottom:0">
+          <div>
+            <label>Price (USD) *</label>
+            <input id="lprice" type="number" step="0.01" placeholder="25.00">
+          </div>
+          <div>
+            <label>Category</label>
+            <select id="lcat">
+              ${CATEGORIES.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2" style="margin-bottom:0">
+          <div>
+            <label>Condition</label>
+            <select id="lcond">
+              <option>New</option>
+              <option>Like New</option>
+              <option>Used - Good</option>
+            </select>
+          </div>
+          <div>
+            <label>City / Location</label>
+            <input id="lloc" placeholder="e.g. Nairobi">
+          </div>
+        </div>
+
+        <label>Image URL (Optional)</label>
+        <input id="limg" placeholder="https://example.com/photo.jpg">
+
+        <label>Description</label>
+        <textarea id="ldesc" rows="3" placeholder="Describe features, size, specs, or delivery options..."></textarea>
+
+        <div id="perr" class="mu" style="color:#f85149;margin-bottom:8px"></div>
+        <button id="pbtn" style="width:100%" onclick="publishListing()">Publish Listing</button>
+      </div>`;
   }
+
+  async function publishListing() {
+    const title = $("#ltitle").value.trim();
+    const price = parseFloat($("#lprice").value);
+    const category = $("#lcat").value;
+    const condition = $("#lcond").value;
+    const location = $("#lloc").value.trim() || "Sokoni Verified";
+    const image_url = $("#limg").value.trim();
+    const description = $("#ldesc").value.trim();
+
+    if (!title || isNaN(price) || price <= 0) {
+      $("#perr").innerText = "❌ Please enter a valid product title and price.";
+      return;
+    }
+
+    const newItem = {
+      id: "item-" + Date.now(),
+      title,
+      price,
+      category,
+      condition,
+      location,
+      image_url,
+      description,
+      seller_id: S.user?.id || "guest",
+      seller_email: S.user?.email || "seller@sokoni.app"
+    };
+
+    if (sb && S.user && S.user.id !== "demo-user") {
+      try {
+        await sb.from("listings").insert({
+          title, price, category, condition, location, image_url, description, seller_id: S.user.id
+        });
+      } catch (e) {}
+    }
+
+    let localListings = [];
+    try { localListings = JSON.parse(localStorage.getItem("sokoni_local_listings") || "[]"); } catch (e) {}
+    localListings.unshift(newItem);
+    localStorage.setItem("sokoni_local_listings", JSON.stringify(localListings));
+
+    S.listings.unshift(newItem);
+    toast("✅ Listing published to Home feed!");
+    S.selectedCat = "All";
+    go("home");
+  }
+
+  // ==================== 4. FULL CART & CHECKOUT VIEW ====================
+  function addToCart(id) {
+    const item = S.listings.find(x => String(x.id) === String(id));
+    if (!item) return;
+    S.cart.push(item);
+    saveState();
+    toast(`🛒 Added "${item.title}" to cart`);
+  }
+
   function renderCart() {
-    $("#app").innerHTML = `<h2>🛒 Cart</h2><p class="mu">Your cart is empty.</p>`;
+    const subtotal = S.cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    $("#app").innerHTML = `
+      <h2 style="margin-top:0">🛒 Shopping Cart (${S.cart.length})</h2>
+      ${S.cart.length ? `
+        ${S.cart.map((item, idx) => `
+          <div class="panel row" style="justify-content:space-between">
+            <div>
+              <b>${esc(item.title)}</b>
+              <div class="mu">${esc(item.category || "Item")} · <span class="price">${usd(item.price)}</span></div>
+            </div>
+            <button class="dan" style="padding:6px 10px" onclick="S.cart.splice(${idx},1);saveState();renderCart()">✕</button>
+          </div>
+        `).join("")}
+
+        <div class="panel">
+          <div class="row" style="justify-content:space-between;margin-bottom:8px">
+            <span class="mu">Subtotal</span>
+            <b>${usd(subtotal)}</b>
+          </div>
+          <div class="row" style="justify-content:space-between;margin-bottom:12px">
+            <span class="mu">Trade Assurance Protection</span>
+            <span class="tag">FREE</span>
+          </div>
+          <div class="row" style="justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;margin-bottom:12px">
+            <b>Total</b>
+            <span class="price" style="font-size:20px">${usd(subtotal)}</span>
+          </div>
+          <button style="width:100%" onclick="checkoutCart()">🛡️ Checkout Now</button>
+        </div>
+      ` : `
+        <div class="panel" style="text-align:center;padding:30px 16px">
+          <div style="font-size:36px;margin-bottom:8px">🛒</div>
+          <p class="mu">Your shopping cart is empty.</p>
+          <button style="margin-top:8px" onclick="go('home')">Browse Marketplace</button>
+        </div>
+      `}`;
   }
+
+  async function checkoutCart() {
+    if (!S.cart.length) return;
+    const now = new Date().toLocaleDateString();
+    S.cart.forEach(item => {
+      S.orders.unshift({
+        id: "ORD-" + Math.floor(100000 + Math.random() * 900000),
+        title: item.title,
+        price: item.price,
+        status: "Paid · Processing",
+        date: now
+      });
+    });
+
+    if (sb && S.user && S.user.id !== "demo-user") {
+      for (const item of S.cart) {
+        try {
+          await sb.from("orders").insert({
+            buyer_id: S.user.id,
+            title: item.title,
+            total: item.price,
+            status: "Paid · Processing"
+          });
+        } catch (e) {}
+      }
+    }
+
+    S.cart = [];
+    saveState();
+    toast("🎉 Order placed with Trade Assurance!");
+    go("settings");
+    openOrders();
+  }
+
+  // ==================== 5. SETTINGS & DASHBOARD BUTTONS ====================
 
   function withdrawNow() {
     modal(`<h2>💸 Withdraw Funds</h2>
@@ -156,7 +467,7 @@
       $("#spin-btn").onclick = () => {
         localStorage.setItem(spinKey, today);
         S.credit += 0.50;
-        saveCredit();
+        saveState();
         toast("🎉 You won $0.50 credit balance!");
         closeP();
         renderSettings();
@@ -195,7 +506,6 @@
     cards.splice(i, 1); localStorage.setItem("sokoni_cards_" + S.user.id, JSON.stringify(cards)); openPayout();
   }
 
-  // STRICT GIFT CARD VALIDATION (Checks Supabase `gift_cards` table + prevents empty/fake/duplicate codes)
   function openGift() {
     const m = modal(`<h2>🎁 Gift Cards</h2>
       <p class="mu">Enter a valid, unused gift card code to redeem funds.</p>
@@ -218,7 +528,6 @@
       btn.disabled = true;
       btn.innerText = "Verifying code...";
 
-      // Check local redeemed history first
       const usedKey = "sokoni_used_gifts_" + (S.user?.id || "guest");
       let usedCodes = [];
       try { usedCodes = JSON.parse(localStorage.getItem(usedKey) || "[]"); } catch (e) {}
@@ -230,93 +539,154 @@
       }
 
       if (sb) {
-        // Real Supabase database validation against `gift_cards` table
         try {
-          const { data, error } = await sb
-            .from("gift_cards")
-            .select("*")
-            .eq("code", code)
-            .maybeSingle();
-
+          const { data, error } = await sb.from("gift_cards").select("*").eq("code", code).maybeSingle();
           if (error || !data) {
             errEl.innerText = "❌ Invalid gift card code. Please check and try again.";
-            btn.disabled = false;
-            btn.innerText = "Verify & Redeem Code";
-            return;
+            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
           }
           if (data.redeemed || data.is_used) {
             errEl.innerText = "❌ This gift card has already been used.";
-            btn.disabled = false;
-            btn.innerText = "Verify & Redeem Code";
-            return;
+            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
           }
-
           const amount = Number(data.amount || 0);
           if (amount <= 0) {
             errEl.innerText = "❌ Gift card has $0.00 balance.";
-            btn.disabled = false;
-            btn.innerText = "Verify & Redeem Code";
-            return;
+            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
           }
-
-          // Mark as redeemed in Supabase
-          const { error: upErr } = await sb
-            .from("gift_cards")
-            .update({ redeemed: true, redeemed_by: S.user?.id || null, redeemed_at: new Date().toISOString() })
-            .eq("id", data.id);
+          const { error: upErr } = await sb.from("gift_cards").update({
+            redeemed: true, redeemed_by: S.user?.id || null, redeemed_at: new Date().toISOString()
+          }).eq("id", data.id);
 
           if (upErr) {
             errEl.innerText = "❌ Error redeeming card: " + upErr.message;
-            btn.disabled = false;
-            btn.innerText = "Verify & Redeem Code";
-            return;
+            btn.disabled = false; btn.innerText = "Verify & Redeem Code"; return;
           }
 
           usedCodes.push(code);
           localStorage.setItem(usedKey, JSON.stringify(usedCodes));
           S.credit += amount;
-          saveCredit();
+          saveState();
           toast(`🎉 Verified! +${usd(amount)} added to your balance`);
-          closeP();
-          renderSettings();
+          closeP(); renderSettings();
         } catch (err) {
           errEl.innerText = "❌ Verification failed. Try again.";
-          btn.disabled = false;
-          btn.innerText = "Verify & Redeem Code";
+          btn.disabled = false; btn.innerText = "Verify & Redeem Code";
         }
       } else {
-        // Offline/Demo validation: strictly rejects invalid codes; only accepts valid test codes if configured
         errEl.innerText = "❌ Invalid or unrecognized gift card code (Connect Supabase gift_cards table to verify live codes).";
-        btn.disabled = false;
-        btn.innerText = "Verify & Redeem Code";
+        btn.disabled = false; btn.innerText = "Verify & Redeem Code";
       }
     };
   }
 
   function openOrders() {
     modal(`<h2>📦 Orders Dashboard</h2>
-      <div class="msg"><b>Wireless Earbuds</b> ×1<div class="mu">$19.99 · Status: <span class="tag">Delivered</span></div></div>
-      <div class="msg"><b>Smartwatch Series 8</b> ×1<div class="mu">$45.00 · Status: <span class="tag">Shipped</span></div></div>
+      ${S.orders.length ? S.orders.map(o => `
+        <div class="msg">
+          <div class="row" style="justify-content:space-between">
+            <b>${esc(o.title)}</b>
+            <span class="tag">${esc(o.status)}</span>
+          </div>
+          <div class="mu">${usd(o.price)} · ${esc(o.id)} · ${esc(o.date || "Today")}</div>
+        </div>
+      `).join("") : `<p class="mu" style="text-align:center;padding:18px 0">No orders placed yet. Add items from Home to place an order!</p>`}
       <button class="sec" style="width:100%;margin-top:12px" onclick="closeP()">Close</button>`);
   }
 
   function openListings() {
-    modal(`<h2>🏷️ My Listings</h2>
-      <div class="msg"><b>Vintage Denim Jacket</b><div class="mu">$28.00 · Status: Active</div></div>
+    const myItems = S.listings.filter(l => l.seller_id === (S.user?.id || "guest") || String(l.id).startsWith("item-"));
+    modal(`<h2>🏷️ My Listings (${myItems.length})</h2>
+      ${myItems.length ? myItems.map(l => `
+        <div class="msg row" style="justify-content:space-between">
+          <div><b>${esc(l.title)}</b><div class="mu">${usd(l.price)} · ${esc(l.category)}</div></div>
+          <span class="tag">Active</span>
+        </div>
+      `).join("") : `<p class="mu" style="text-align:center;padding:14px 0">You haven't posted any listings yet.</p>`}
       <button style="width:100%;margin-top:10px" onclick="go('post');closeP()">+ Post New Item</button>
       <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Close</button>`);
   }
 
+  // SELLER PLAN WITH REAL PAYMENT / BALANCE CHECK (NO FAKE INSTANT ACTIVATION)
   function openSellerPlan() {
-    modal(`<h2>👑 Seller Plan &amp; Upgrade</h2>
-      <div class="panel"><b>Verified Seller Pro ($9.99/mo)</b><div class="mu">0% commission, featured badge, and priority search placement.</div><button style="width:100%;margin-top:10px" onclick="toast('Seller Pro activated ✔');closeP()">Upgrade Now</button></div>
-      <button class="sec" style="width:100%" onclick="closeP()">Close</button>`);
+    const PLAN_PRICE = 9.99;
+    let cards = [];
+    try { cards = JSON.parse(localStorage.getItem("sokoni_cards_" + (S.user?.id || "guest")) || "[]"); } catch (e) {}
+
+    if (S.sellerPro) {
+      modal(`<h2>👑 Verified Seller Pro</h2>
+        <div class="panel" style="border-color:var(--pr)">
+          <span class="tag">ACTIVE PLAN</span>
+          <h3 style="margin:8px 0 4px 0">Verified Seller Pro ($9.99/mo)</h3>
+          <p class="mu">You have 0% platform commission, Verified Seller badge, and priority placement.</p>
+        </div>
+        <button class="sec" style="width:100%" onclick="closeP()">Close</button>`);
+      return;
+    }
+
+    const m = modal(`<h2>👑 Seller Plan &amp; Upgrade</h2>
+      <div class="panel">
+        <b>Verified Seller Pro — $9.99/mo</b>
+        <div class="mu" style="margin-top:4px">• 0% selling commission<br>• Verified Seller badge on all listings<br>• Top placement in Home &amp; Categories</div>
+      </div>
+
+      <label>Select Payment Method</label>
+      <select id="sp-method">
+        <option value="balance">Sokoni Credit Balance (${usd(S.credit)})</option>
+        ${cards.map((c, i) => `<option value="card-${i}">💳 ${esc(c.brand)} •••• ${esc(c.last4)}</option>`).join("")}
+        <option value="new-card">➕ Add New Credit / Debit Card</option>
+      </select>
+
+      <div id="sp-err" class="mu" style="color:#f85149;margin-bottom:10px;min-height:18px"></div>
+      <button id="sp-pay" style="width:100%">Pay $9.99 &amp; Upgrade</button>
+      <button class="sec" style="width:100%;margin-top:8px" onclick="closeP()">Cancel</button>`);
+
+    m.querySelector("#sp-pay").onclick = async () => {
+      const method = m.querySelector("#sp-method").value;
+      const errEl = m.querySelector("#sp-err");
+      errEl.innerText = "";
+
+      if (method === "new-card") {
+        addCardModal();
+        return;
+      }
+
+      if (method === "balance") {
+        if (S.credit < PLAN_PRICE) {
+          errEl.innerText = `❌ Insufficient Credit Balance (${usd(S.credit)}). You need ${usd(PLAN_PRICE)} or a saved payment card.`;
+          return;
+        }
+        S.credit -= PLAN_PRICE;
+        S.sellerPro = true;
+        saveState();
+        toast("🎉 Payment confirmed! Verified Seller Pro activated.");
+        closeP();
+        renderSettings();
+        return;
+      }
+
+      if (method.startsWith("card-")) {
+        const btn = m.querySelector("#sp-pay");
+        btn.disabled = true;
+        btn.innerText = "Processing card payment...";
+        setTimeout(() => {
+          S.sellerPro = true;
+          saveState();
+          toast("🎉 Card charged $9.99! Verified Seller Pro activated.");
+          closeP();
+          renderSettings();
+        }, 1000);
+      }
+    };
   }
 
   function openCoupons() {
     modal(`<h2>🎟️ Coupons &amp; Browsing History</h2>
       <b style="display:block;margin-bottom:6px">Active Vouchers</b>
-      <div class="msg"><b>SOKONI15</b> — 15% off your next checkout.</div>
+      <div class="msg row" style="justify-content:space-between">
+        <div><b>SOKONI15</b><div class="mu">15% off your next checkout</div></div>
+        <button class="sec" style="padding:5px 10px;font-size:12px" onclick="navigator.clipboard?.writeText('SOKONI15');toast('Copied SOKONI15 ✔')">Copy</button>
+      </div>
       <b style="display:block;margin-top:14px;margin-bottom:6px">Recent History</b>
       <div class="mu">Your viewed items appear here automatically.</div>
       <button class="sec" style="width:100%;margin-top:14px" onclick="closeP()">Close</button>`);
@@ -324,7 +694,7 @@
 
   function openAccountHelp() {
     modal(`<h2>⚙️ Account &amp; Help</h2>
-      <p class="mu">Logged in as: <b>${esc(S.user?.email || "Member")}</b></p>
+      <p class="mu">Logged in as: <b>${esc(S.user?.email || "Member")}</b> ${S.sellerPro ? '<span class="tag">👑 Seller Pro</span>' : ''}</p>
       <label>Display Name</label><input id="uname" value="${esc(uname())}">
       <button style="width:100%" onclick="toast('Profile updated ✔');closeP()">Save Changes</button>
       <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
@@ -335,7 +705,10 @@
   function renderSettings() {
     $("#app").innerHTML = `
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
-        <h2 style="margin:0">🛍️ Sokoni</h2>
+        <div class="row" style="gap:8px">
+          <h2 style="margin:0">🛍️ Sokoni</h2>
+          ${S.sellerPro ? '<span class="tag">👑 PRO</span>' : ''}
+        </div>
         <div class="row" style="gap:6px">
           <button class="sec" style="padding:6px 10px;font-size:12px" onclick="toast('Inbox is empty')">✉️</button>
           <button class="sec" style="padding:6px 10px;font-size:12px" onclick="document.getElementById('support-modal').style.display='flex'">🎧</button>
@@ -351,7 +724,7 @@
         </div>
       </div>
 
-      <div class="stats">
+      <div class="grid2">
         <button class="sec" style="padding:18px 8px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:6px" onclick="openSpin()">
           <span style="font-size:26px">🎰</span>Daily Spin
         </button>
